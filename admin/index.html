@@ -9,7 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="./styles.css" />
 </head>
-<body>
+<body class="is-login">
   <div id="login-view" class="login-wrap">
     <div class="login-card">
       <div class="brand">
@@ -20,7 +20,10 @@
       <label>Identifiant</label>
       <input id="username" type="text" autocomplete="username" placeholder="admin" />
       <label>Mot de passe</label>
-      <input id="password" type="password" autocomplete="current-password" placeholder="••••••••" />
+      <div class="password-field">
+        <input id="password" type="password" autocomplete="current-password" placeholder="••••••••" />
+        <button type="button" id="toggle-password" class="password-toggle" aria-label="Afficher le mot de passe" title="Afficher / masquer">👁</button>
+      </div>
       <button id="btn-login" class="btn primary">Connexion</button>
       <p id="login-error" class="error" hidden></p>
     </div>

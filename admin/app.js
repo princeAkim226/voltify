@@ -63,6 +63,8 @@ async function api(action, { method = 'GET', body, id } = {}) {
 }
 
 function enterApp(username) {
+  document.body.classList.remove('is-login');
+  document.body.classList.add('is-app');
   loginView.hidden = true;
   appView.hidden = false;
   document.getElementById('admin-name').textContent = username || 'Administrateur';
@@ -71,10 +73,21 @@ function enterApp(username) {
 function logout() {
   token = '';
   sessionStorage.removeItem(STORAGE_KEY);
+  document.body.classList.remove('is-app');
+  document.body.classList.add('is-login');
   appView.hidden = true;
   loginView.hidden = false;
   document.getElementById('password').value = '';
 }
+
+document.getElementById('toggle-password').addEventListener('click', () => {
+  const input = document.getElementById('password');
+  const btn = document.getElementById('toggle-password');
+  const show = input.type === 'password';
+  input.type = show ? 'text' : 'password';
+  btn.textContent = show ? '🙈' : '👁';
+  btn.setAttribute('aria-label', show ? 'Masquer le mot de passe' : 'Afficher le mot de passe');
+});
 
 document.getElementById('btn-login').addEventListener('click', async () => {
   showError(loginError, '');
@@ -297,7 +310,12 @@ async function refreshAll() {
 }
 
 (async function boot() {
-  if (!token) return;
+  document.body.classList.add(token ? 'is-app' : 'is-login');
+  if (!token) {
+    loginView.hidden = false;
+    appView.hidden = true;
+    return;
+  }
   try {
     enterApp('Administrateur');
     await refreshAll();
