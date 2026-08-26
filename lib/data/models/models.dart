@@ -1,58 +1,14 @@
 enum LoyaltyTrack { lumineux, deco }
 
-enum ProductCategory {
-  smartphones,
-  ordinateurs,
-  tv,
-  audio,
-  accessoires,
-  eclairage,
-  electromenager,
-}
-
-extension ProductCategoryX on ProductCategory {
-  String get label {
-    switch (this) {
-      case ProductCategory.smartphones:
-        return 'Smartphones';
-      case ProductCategory.ordinateurs:
-        return 'Ordinateurs';
-      case ProductCategory.tv:
-        return 'TV & Vidéo';
-      case ProductCategory.audio:
-        return 'Audio';
-      case ProductCategory.accessoires:
-        return 'Accessoires';
-      case ProductCategory.eclairage:
-        return 'Éclairage LED';
-      case ProductCategory.electromenager:
-        return 'Électroménager';
-    }
-  }
-
-  String get id => name;
-
-  LoyaltyTrack get loyaltyTrack {
-    switch (this) {
-      case ProductCategory.eclairage:
-        return LoyaltyTrack.lumineux;
-      case ProductCategory.accessoires:
-      case ProductCategory.audio:
-        return LoyaltyTrack.deco;
-      default:
-        return LoyaltyTrack.lumineux;
-    }
-  }
-}
-
 class Product {
   const Product({
     required this.id,
     required this.name,
     required this.brand,
-    required this.category,
+    required this.categoryId,
     required this.price,
     required this.description,
+    this.subcategoryId,
     this.oldPrice,
     this.badge,
     this.rating = 4.5,
@@ -60,12 +16,15 @@ class Product {
     this.inStock = true,
     this.specs = const [],
     this.pointsReward = 50,
+    this.imageUrl,
+    this.loyaltyTrack = LoyaltyTrack.lumineux,
   });
 
   final String id;
   final String name;
   final String brand;
-  final ProductCategory category;
+  final String categoryId;
+  final String? subcategoryId;
   final int price;
   final int? oldPrice;
   final String description;
@@ -75,6 +34,8 @@ class Product {
   final bool inStock;
   final List<String> specs;
   final int pointsReward;
+  final String? imageUrl;
+  final LoyaltyTrack loyaltyTrack;
 
   bool get hasDiscount => oldPrice != null && oldPrice! > price;
 
@@ -82,8 +43,6 @@ class Product {
     if (!hasDiscount) return 0;
     return (((oldPrice! - price) / oldPrice!) * 100).round();
   }
-
-  LoyaltyTrack get loyaltyTrack => category.loyaltyTrack;
 }
 
 class PromoSlide {
@@ -180,6 +139,7 @@ class OrderRecord {
     this.city,
     this.pickupPointId,
     this.pointsEarned = const {},
+    this.loyaltyDiscount = 0,
   });
 
   final String id;
@@ -194,6 +154,7 @@ class OrderRecord {
   final PaymentMethod paymentMethod;
   final int subtotal;
   final int deliveryFee;
+  final int loyaltyDiscount;
   final int total;
   final DateTime createdAt;
   final Map<LoyaltyTrack, int> pointsEarned;
@@ -223,4 +184,24 @@ class LoyaltyBalance {
       deco += points;
     }
   }
+}
+
+class CustomerProfile {
+  const CustomerProfile({
+    this.id,
+    this.fullName,
+    this.email,
+    this.phone,
+    this.avatarUrl,
+    this.provider,
+  });
+
+  final String? id;
+  final String? fullName;
+  final String? email;
+  final String? phone;
+  final String? avatarUrl;
+  final String? provider;
+
+  bool get isLoggedIn => id != null;
 }

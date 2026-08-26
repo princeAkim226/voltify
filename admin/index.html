@@ -133,19 +133,23 @@
       <div class="grid-2">
         <div>
           <label>Catégorie *</label>
-          <select id="f-category" required>
-            <option value="smartphones">Smartphones</option>
-            <option value="ordinateurs">Ordinateurs</option>
-            <option value="tv">TV & Vidéo</option>
-            <option value="audio">Audio</option>
-            <option value="accessoires">Accessoires</option>
-            <option value="eclairage">Éclairage LED</option>
-            <option value="electromenager">Électroménager</option>
-          </select>
+          <select id="f-category" required></select>
         </div>
+        <div>
+          <label>Sous-catégorie *</label>
+          <select id="f-subcategory" required></select>
+        </div>
+      </div>
+      <div class="grid-2">
         <div>
           <label>Badge</label>
           <input id="f-badge" placeholder="Promo, -20%…" />
+        </div>
+        <div>
+          <label>Image produit</label>
+          <input id="f-image-file" type="file" accept="image/*" />
+          <input id="f-image-url" type="hidden" />
+          <img id="f-image-preview" alt="" style="display:none;margin-top:8px;max-height:120px;border-radius:10px;" />
         </div>
       </div>
       <div class="grid-3">

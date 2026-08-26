@@ -49,6 +49,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
     final orders = context.read<OrderProvider>();
 
     final items = cart.items.toList();
+    final loyaltyDiscount = loyalty.discountForSubtotal(cart.subtotal);
     final earned = await loyalty.awardForItems(items);
     final order = await orders.placeOrder(
       items: items,
@@ -61,6 +62,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
       pickupPointId: draft.pickupPointId,
       paymentMethod: draft.paymentMethod!,
       pointsEarned: earned,
+      loyaltyDiscount: loyaltyDiscount,
     );
     cart.clear();
     draft.resetPayment();
@@ -76,8 +78,10 @@ class _PaymentScreenState extends State<PaymentScreen> {
   Widget build(BuildContext context) {
     final draft = context.watch<CheckoutDraft>();
     final cart = context.watch<CartProvider>();
+    final loyalty = context.watch<LoyaltyProvider>();
     final fee = MockCatalog.computeDeliveryFee(cart.subtotal, draft.deliveryMode);
-    final total = cart.subtotal + fee;
+    final discount = loyalty.discountForSubtotal(cart.subtotal);
+    final total = (cart.subtotal - discount + fee).clamp(0, 1 << 31);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Paiement mobile')),

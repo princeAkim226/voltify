@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/formatters.dart';
+import '../../data/mock/lighting_taxonomy.dart';
 import '../../data/models/models.dart';
 import '../../data/repositories/app_state.dart';
 import '../../shared/widgets/common_widgets.dart';
@@ -118,7 +119,13 @@ class ProductDetailScreen extends StatelessWidget {
                         label: product.inStock ? 'En stock' : 'Rupture',
                         color: product.inStock ? AppColors.greenLight : AppColors.danger,
                       ),
-                      _InfoPill(icon: Icons.category_outlined, label: product.category.label),
+                      _InfoPill(
+                        icon: Icons.category_outlined,
+                        label: LightingTaxonomy.labelFor(
+                          categoryId: product.categoryId,
+                          subcategoryId: product.subcategoryId,
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 20),

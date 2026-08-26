@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../data/mock/lighting_taxonomy.dart';
 import '../../data/mock/mock_catalog.dart';
 import '../../data/models/models.dart';
 import '../../data/repositories/app_state.dart';
@@ -141,8 +142,9 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         const SliverToBoxAdapter(child: SizedBox(height: 22)),
         SliverToBoxAdapter(
-          child: SectionHeader(title: 'Mes points fidélité'),
+          child: SectionHeader(title: 'Fidélité Éclairage'),
         ),
+        // ignore: prefer_const_constructors
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
@@ -150,9 +152,9 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 Expanded(
                   child: _PointsCard(
-                    title: 'Lumineux',
+                    title: 'Éclairage',
                     value: loyalty.lumineux,
-                    subtitle: 'Objectif ${loyalty.lumineuxGoal}',
+                    subtitle: '${context.watch<LoyaltyProvider>().tier.label} · -${context.watch<LoyaltyProvider>().tier.discountPercent}%',
                     progress: loyalty.progress(LoyaltyTrack.lumineux),
                     soft: AppColors.amberSoft,
                     border: AppColors.amberBorder,
@@ -165,18 +167,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: _PointsCard(
-                    title: 'Décoration',
-                    value: loyalty.deco,
-                    subtitle: 'Objectif ${loyalty.decoGoal}',
-                    progress: loyalty.progress(LoyaltyTrack.deco),
-                    soft: AppColors.primarySoft,
-                    border: const Color(0xFFAFA9EC),
-                    iconBg: const Color(0xFFAFA9EC),
-                    icon: Icons.auto_awesome_rounded,
-                    titleColor: AppColors.primaryDark,
-                    valueColor: const Color(0xFF26215C),
-                    fill: AppColors.primary,
+                  child: _SoonCard(
+                    title: 'Décoratif',
+                    subtitle: 'Bientôt disponible',
                   ),
                 ),
               ],
@@ -186,7 +179,7 @@ class _HomeScreenState extends State<HomeScreen> {
         const SliverToBoxAdapter(child: SizedBox(height: 22)),
         SliverToBoxAdapter(
           child: SectionHeader(
-            title: 'Catégories',
+            title: 'Catégories Éclairage',
             actionLabel: 'Tout voir',
             onAction: widget.onOpenCatalog,
           ),
@@ -197,14 +190,15 @@ class _HomeScreenState extends State<HomeScreen> {
             child: ListView.separated(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               scrollDirection: Axis.horizontal,
-              itemCount: ProductCategory.values.length,
+              itemCount: LightingTaxonomy.categories.length,
               separatorBuilder: (_, __) => const SizedBox(width: 10),
               itemBuilder: (context, index) {
-                final cat = ProductCategory.values[index];
+                final cat = LightingTaxonomy.categories[index];
                 return _CategoryChip(
-                  category: cat,
+                  icon: cat.icon,
+                  label: cat.label,
                   onTap: () {
-                    context.read<CatalogProvider>().setCategory(cat);
+                    context.read<CatalogProvider>().setCategory(cat.id);
                     widget.onOpenCatalog?.call();
                   },
                 );
@@ -393,20 +387,63 @@ class _PointsCard extends StatelessWidget {
   }
 }
 
-class _CategoryChip extends StatelessWidget {
-  const _CategoryChip({required this.category, required this.onTap});
+class _SoonCard extends StatelessWidget {
+  const _SoonCard({required this.title, required this.subtitle});
 
-  final ProductCategory category;
+  final String title;
+  final String subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.primarySoft,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFAFA9EC)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(color: const Color(0xFFAFA9EC), borderRadius: BorderRadius.circular(10)),
+            child: const Icon(Icons.auto_awesome_rounded, color: Color(0xFF26215C), size: 18),
+          ),
+          const SizedBox(height: 10),
+          Text(title, style: const TextStyle(color: AppColors.primaryDark, fontWeight: FontWeight.w700, fontSize: 13)),
+          const SizedBox(height: 6),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.7),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(subtitle, style: const TextStyle(color: AppColors.primaryDark, fontWeight: FontWeight.w800, fontSize: 12)),
+          ),
+          const SizedBox(height: 10),
+          Text('Liste à venir', style: TextStyle(color: AppColors.primaryDark.withValues(alpha: 0.7), fontSize: 11)),
+        ],
+      ),
+    );
+  }
+}
+
+class _CategoryChip extends StatelessWidget {
+  const _CategoryChip({required this.icon, required this.label, required this.onTap});
+
+  final IconData icon;
+  final String label;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final colors = ProductImagePlaceholder.gradientFor(category);
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
       child: Container(
-        width: 88,
+        width: 100,
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
           color: AppColors.surface,
@@ -420,14 +457,14 @@ class _CategoryChip extends StatelessWidget {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                gradient: LinearGradient(colors: colors),
+                color: AppColors.primarySoft,
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(ProductImagePlaceholder.iconFor(category), color: Colors.white, size: 20),
+              child: Icon(icon, color: AppColors.primary, size: 20),
             ),
             const SizedBox(height: 8),
             Text(
-              category.label,
+              label,
               textAlign: TextAlign.center,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,

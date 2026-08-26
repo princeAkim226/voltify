@@ -149,6 +149,45 @@ exports.handler = async (event) => {
       return json(200, { ok: true });
     }
 
+    if (action === 'upload' && event.httpMethod === 'POST') {
+      const { supabaseUrl, serviceRole } = getSecrets();
+      if (!serviceRole) return json(500, { error: 'SUPABASE_SERVICE_ROLE_KEY manquante' });
+      const body = JSON.parse(event.body || '{}');
+      const filename = String(body.filename || `img-${Date.now()}.jpg`).replace(/[^\w.\-]/g, '_');
+      const contentType = body.contentType || 'image/jpeg';
+      const base64 = String(body.base64 || '');
+      if (!base64) return json(400, { error: 'Image manquante' });
+      const bytes = Buffer.from(base64, 'base64');
+
+      await fetch(`${supabaseUrl}/storage/v1/bucket`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${serviceRole}`,
+          apikey: serviceRole,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ id: 'products', name: 'products', public: true }),
+      }).catch(() => {});
+
+      const objectPath = `${Date.now()}-${filename}`;
+      const up = await fetch(`${supabaseUrl}/storage/v1/object/products/${objectPath}`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${serviceRole}`,
+          apikey: serviceRole,
+          'Content-Type': contentType,
+          'x-upsert': 'true',
+        },
+        body: bytes,
+      });
+      const text = await up.text();
+      if (!up.ok) {
+        return json(up.status, { error: text || 'Upload impossible' });
+      }
+      const url = `${supabaseUrl}/storage/v1/object/public/products/${objectPath}`;
+      return json(200, { url });
+    }
+
     if (action === 'orders' && event.httpMethod === 'GET') {
       const data = await supabaseRequest(
         'orders?select=*&order=created_at.desc&limit=100',

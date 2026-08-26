@@ -16,17 +16,86 @@ function money(n) {
   return new Intl.NumberFormat('fr-FR').format(Number(n || 0)) + ' FCFA';
 }
 
+const TAXONOMY = [
+  { id: 'architectural', label: 'Architectural / Façade', children: [
+    { id: 'facade', label: 'Éclairage façade' }, { id: 'wall_washer', label: 'Wall washer' },
+    { id: 'aluminum_profile', label: 'Profilés aluminium' }, { id: 'neon_flex', label: 'Neon Flex' },
+  ]},
+  { id: 'indoor', label: 'Indoor / Résidentiel', children: [
+    { id: 'ceiling', label: 'Plafonniers' }, { id: 'downlight', label: 'Down lights' },
+    { id: 'panel', label: 'Panneaux LED' }, { id: 'spot', label: 'Spots' },
+    { id: 'track', label: 'Rails / Track' }, { id: 'chandelier', label: 'Lustres' },
+    { id: 'pendant', label: 'Suspensions' }, { id: 'cabinet', label: 'Éclairage meubles' },
+    { id: 'bulbs', label: 'Ampoules LED' }, { id: 'bathroom_mirror', label: 'Miroirs SDB' },
+  ]},
+  { id: 'industrial', label: 'Industriel / Entrepôt', children: [
+    { id: 'high_bay', label: 'High bay' }, { id: 'flood_industrial', label: 'Projecteurs' },
+    { id: 'tubes', label: 'Tubes LED' }, { id: 'exit', label: 'Secours' }, { id: 'fixtures', label: 'Luminaires' },
+  ]},
+  { id: 'outdoor', label: 'Extérieur', children: [
+    { id: 'flood', label: 'Flood lights' }, { id: 'street', label: 'Éclairage rue' },
+    { id: 'wall_outdoor', label: 'Appliques' }, { id: 'bulkhead', label: 'Bulkhead' },
+  ]},
+  { id: 'landscape', label: 'Paysage / Jardin', children: [
+    { id: 'bollard', label: 'Bollards' }, { id: 'spike', label: 'Piques' },
+    { id: 'inground', label: 'Encastrés sol' }, { id: 'step', label: 'Step lights' },
+    { id: 'string', label: 'Guirlandes' }, { id: 'palm', label: 'Palmier' },
+  ]},
+  { id: 'signage', label: 'Signalétique / Publicité', children: [
+    { id: 'neon_sign', label: 'Néons' }, { id: 'programmable', label: 'Programmables' },
+    { id: 'strips_rgb', label: 'Bandes RGB' }, { id: 'rope', label: 'Rope lights' }, { id: 'motif', label: 'Motifs' },
+  ]},
+  { id: 'underwater', label: 'Sous-marin / Piscine', children: [
+    { id: 'pool', label: 'Piscine' }, { id: 'underwater_spot', label: 'Spots submersibles' },
+  ]},
+  { id: 'accessories', label: 'Accessoires LED', children: [
+    { id: 'drivers', label: 'Drivers' }, { id: 'dimmers', label: 'Dimmers' },
+    { id: 'sensors', label: 'Capteurs' }, { id: 'cables', label: 'Câbles' },
+    { id: 'holders', label: 'Douilles' }, { id: 'profiles_acc', label: 'Profilés acc.' },
+  ]},
+];
+
 function categoryLabel(id) {
-  return ({
-    smartphones: 'Smartphones',
-    ordinateurs: 'Ordinateurs',
-    tv: 'TV & Vidéo',
-    audio: 'Audio',
-    accessoires: 'Accessoires',
-    eclairage: 'Éclairage LED',
-    electromenager: 'Électroménager',
-  })[id] || id;
+  return TAXONOMY.find((c) => c.id === id)?.label || id;
 }
+
+function fillCategorySelects(categoryId, subcategoryId) {
+  const catSel = document.getElementById('f-category');
+  const subSel = document.getElementById('f-subcategory');
+  catSel.innerHTML = TAXONOMY.map((c) => `<option value="${c.id}">${c.label}</option>`).join('');
+  const selected = categoryId || TAXONOMY[0].id;
+  catSel.value = selected;
+  const children = TAXONOMY.find((c) => c.id === selected)?.children || [];
+  subSel.innerHTML = children.map((s) => `<option value="${s.id}">${s.label}</option>`).join('');
+  if (subcategoryId) subSel.value = subcategoryId;
+}
+
+document.getElementById('f-category')?.addEventListener('change', () => {
+  fillCategorySelects(document.getElementById('f-category').value);
+});
+
+document.getElementById('f-image-file')?.addEventListener('change', async (e) => {
+  const file = e.target.files?.[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async () => {
+    const dataUrl = String(reader.result || '');
+    const base64 = dataUrl.split(',')[1];
+    const preview = document.getElementById('f-image-preview');
+    preview.src = dataUrl;
+    preview.style.display = 'block';
+    try {
+      const res = await api('upload', {
+        method: 'POST',
+        body: { filename: file.name, contentType: file.type, base64 },
+      });
+      document.getElementById('f-image-url').value = res.url;
+    } catch (err) {
+      alert(err.message || 'Upload image impossible');
+    }
+  };
+  reader.readAsDataURL(file);
+});
 
 function showError(el, msg) {
   el.hidden = !msg;
@@ -146,6 +215,7 @@ form.addEventListener('submit', async (e) => {
     name: document.getElementById('f-name').value.trim(),
     brand: document.getElementById('f-brand').value.trim(),
     category_id: document.getElementById('f-category').value,
+    subcategory_id: document.getElementById('f-subcategory').value,
     price: Number(document.getElementById('f-price').value || 0),
     old_price: document.getElementById('f-old-price').value
       ? Number(document.getElementById('f-old-price').value)
@@ -157,6 +227,7 @@ form.addEventListener('submit', async (e) => {
     in_stock: document.getElementById('f-stock').checked,
     points_reward: Number(document.getElementById('f-points').value || 50),
     loyalty_track: document.getElementById('f-track').value,
+    image_url: document.getElementById('f-image-url').value || null,
     specs: document
       .getElementById('f-specs')
       .value.split('\n')
@@ -184,7 +255,7 @@ function openProductDialog(product) {
   document.getElementById('f-id').value = product?.id || '';
   document.getElementById('f-name').value = product?.name || '';
   document.getElementById('f-brand').value = product?.brand || '';
-  document.getElementById('f-category').value = product?.category_id || 'smartphones';
+  fillCategorySelects(product?.category_id || 'indoor', product?.subcategory_id);
   document.getElementById('f-badge').value = product?.badge || '';
   document.getElementById('f-price').value = product?.price ?? '';
   document.getElementById('f-old-price').value = product?.old_price ?? '';
@@ -195,6 +266,16 @@ function openProductDialog(product) {
   document.getElementById('f-description').value = product?.description || '';
   document.getElementById('f-specs').value = Array.isArray(product?.specs) ? product.specs.join('\n') : '';
   document.getElementById('f-stock').checked = product?.in_stock !== false;
+  document.getElementById('f-image-url').value = product?.image_url || '';
+  document.getElementById('f-image-file').value = '';
+  const preview = document.getElementById('f-image-preview');
+  if (product?.image_url) {
+    preview.src = product.image_url;
+    preview.style.display = 'block';
+  } else {
+    preview.removeAttribute('src');
+    preview.style.display = 'none';
+  }
   dialog.showModal();
 }
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../data/mock/lighting_taxonomy.dart';
 import '../../data/mock/mock_catalog.dart';
 import '../../data/models/models.dart';
 import '../../data/repositories/app_state.dart';
@@ -163,7 +164,19 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               }),
             ],
             const SizedBox(height: 16),
-            PriceSummary(subtotal: cart.subtotal, deliveryFee: fee, total: cart.subtotal + fee),
+            Builder(
+              builder: (context) {
+                final loyalty = context.watch<LoyaltyProvider>();
+                final discount = loyalty.discountForSubtotal(cart.subtotal);
+                return PriceSummary(
+                  subtotal: cart.subtotal,
+                  deliveryFee: fee,
+                  loyaltyDiscount: discount,
+                  loyaltyLabel: 'Fidélité ${loyalty.tier.label} (-${loyalty.tier.discountPercent}%)',
+                  total: (cart.subtotal - discount + fee).clamp(0, 1 << 31),
+                );
+              },
+            ),
             const SizedBox(height: 20),
             SizedBox(
               width: double.infinity,

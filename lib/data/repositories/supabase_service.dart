@@ -13,6 +13,9 @@ class SupabaseService {
     await Supabase.initialize(
       url: SupabaseConfig.url,
       publishableKey: SupabaseConfig.anonKey,
+      authOptions: const FlutterAuthClientOptions(
+        authFlowType: AuthFlowType.pkce,
+      ),
     );
     await ensureSession();
   }
@@ -26,24 +29,45 @@ class SupabaseService {
 
   static String? get userId => client.auth.currentUser?.id;
 
-  static ProductCategory? _categoryFromId(String? id) {
-    if (id == null) return null;
-    for (final c in ProductCategory.values) {
-      if (c.id == id) return c;
-    }
-    return null;
+  static bool get isAnonymous => client.auth.currentUser?.isAnonymous ?? true;
+
+  static CustomerProfile? currentProfile() {
+    final user = client.auth.currentUser;
+    if (user == null || user.isAnonymous) return null;
+    final meta = user.userMetadata ?? {};
+    return CustomerProfile(
+      id: user.id,
+      email: user.email,
+      fullName: (meta['full_name'] ?? meta['name'] ?? meta['fullName'])?.toString(),
+      avatarUrl: (meta['avatar_url'] ?? meta['picture'])?.toString(),
+      phone: user.phone,
+      provider: user.appMetadata['provider']?.toString() ?? 'google',
+    );
+  }
+
+  static Future<bool> signInWithGoogle() async {
+    return client.auth.signInWithOAuth(
+      OAuthProvider.google,
+      redirectTo: 'io.supabase.voltify://login-callback/',
+      authScreenLaunchMode: LaunchMode.externalApplication,
+    );
+  }
+
+  static Future<void> signOutToGuest() async {
+    await client.auth.signOut();
+    await ensureSession();
   }
 
   static Product _mapProduct(Map<String, dynamic> row) {
     final specsRaw = row['specs'];
-    final specs = specsRaw is List
-        ? specsRaw.map((e) => e.toString()).toList()
-        : <String>[];
+    final specs = specsRaw is List ? specsRaw.map((e) => e.toString()).toList() : <String>[];
+    final track = (row['loyalty_track'] as String?) == 'deco' ? LoyaltyTrack.deco : LoyaltyTrack.lumineux;
     return Product(
       id: row['id'] as String,
       name: row['name'] as String,
       brand: row['brand'] as String,
-      category: _categoryFromId(row['category_id'] as String?) ?? ProductCategory.accessoires,
+      categoryId: (row['category_id'] as String?) ?? 'indoor',
+      subcategoryId: row['subcategory_id'] as String?,
       price: (row['price'] as num).toInt(),
       oldPrice: row['old_price'] == null ? null : (row['old_price'] as num).toInt(),
       description: (row['description'] as String?) ?? '',
@@ -53,6 +77,8 @@ class SupabaseService {
       inStock: row['in_stock'] as bool? ?? true,
       specs: specs,
       pointsReward: (row['points_reward'] as num?)?.toInt() ?? 50,
+      imageUrl: row['image_url'] as String?,
+      loyaltyTrack: track,
     );
   }
 

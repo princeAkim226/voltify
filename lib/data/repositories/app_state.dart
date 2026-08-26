@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 
+import '../mock/lighting_taxonomy.dart';
 import '../mock/mock_catalog.dart';
 import '../models/models.dart';
 import 'supabase_service.dart';
@@ -113,6 +114,14 @@ class LoyaltyProvider extends ChangeNotifier {
     await _save();
     notifyListeners();
     return earned;
+  }
+
+  LoyaltyTier get tier => LoyaltyTierX.fromPoints(balance.lumineux);
+
+  int discountForSubtotal(int subtotal) {
+    final pct = tier.discountPercent;
+    if (pct <= 0) return 0;
+    return ((subtotal * pct) / 100).round();
   }
 }
 
@@ -228,9 +237,11 @@ class OrderProvider extends ChangeNotifier {
     String? pickupPointId,
     required PaymentMethod paymentMethod,
     required Map<LoyaltyTrack, int> pointsEarned,
+    int loyaltyDiscount = 0,
   }) async {
     final subtotal = items.fold(0, (s, i) => s + i.lineTotal);
     final fee = MockCatalog.computeDeliveryFee(subtotal, deliveryMode);
+    final total = (subtotal - loyaltyDiscount + fee).clamp(0, 1 << 31);
     final order = OrderRecord(
       id: 'VF-${_uuid.v4().substring(0, 8).toUpperCase()}',
       items: items.map((i) => CartItem(product: i.product, quantity: i.quantity)).toList(),
@@ -244,7 +255,8 @@ class OrderProvider extends ChangeNotifier {
       paymentMethod: paymentMethod,
       subtotal: subtotal,
       deliveryFee: fee,
-      total: subtotal + fee,
+      loyaltyDiscount: loyaltyDiscount,
+      total: total,
       createdAt: DateTime.now(),
       pointsEarned: pointsEarned,
     );
@@ -252,9 +264,7 @@ class OrderProvider extends ChangeNotifier {
     await _persist();
     try {
       await SupabaseService.placeOrder(order);
-    } catch (_) {
-      // commande conservée localement si hors-ligne / schéma absent
-    }
+    } catch (_) {}
     notifyListeners();
     return order;
   }
@@ -265,7 +275,8 @@ class CatalogProvider extends ChangeNotifier {
     load();
   }
 
-  ProductCategory? _selectedCategory;
+  String? _selectedCategoryId;
+  String? _selectedSubcategoryId;
   String _query = '';
   List<Product> _all = List.of(MockCatalog.products);
   List<PickupPoint> pickupPoints = List.of(MockCatalog.pickupPoints);
@@ -273,15 +284,20 @@ class CatalogProvider extends ChangeNotifier {
   bool usingRemote = false;
   String? error;
 
-  ProductCategory? get selectedCategory => _selectedCategory;
+  String? get selectedCategoryId => _selectedCategoryId;
+  String? get selectedSubcategoryId => _selectedSubcategoryId;
   String get query => _query;
 
   Map<String, Product> get productById => {for (final p in _all) p.id: p};
 
   List<Product> get products {
-    var list = _selectedCategory == null
-        ? _all
-        : _all.where((p) => p.category == _selectedCategory).toList();
+    var list = _all;
+    if (_selectedCategoryId != null) {
+      list = list.where((p) => p.categoryId == _selectedCategoryId).toList();
+    }
+    if (_selectedSubcategoryId != null) {
+      list = list.where((p) => p.subcategoryId == _selectedSubcategoryId).toList();
+    }
     if (_query.trim().isNotEmpty) {
       final q = _query.trim().toLowerCase();
       list = list
@@ -298,10 +314,11 @@ class CatalogProvider extends ChangeNotifier {
   List<Product> get featured => _all.where((p) => p.badge != null).take(8).toList();
 
   List<Product> similarTo(Product product, {int limit = 6}) {
-    final sameBrand = _all.where((p) => p.id != product.id && p.brand == product.brand);
-    final sameCategory =
-        _all.where((p) => p.id != product.id && p.category == product.category && p.brand != product.brand);
-    return [...sameBrand, ...sameCategory].take(limit).toList();
+    final sameSub = _all.where((p) => p.id != product.id && p.subcategoryId == product.subcategoryId);
+    final sameCat = _all.where(
+      (p) => p.id != product.id && p.categoryId == product.categoryId && p.subcategoryId != product.subcategoryId,
+    );
+    return [...sameSub, ...sameCat].take(limit).toList();
   }
 
   Future<void> load() async {
@@ -310,9 +327,26 @@ class CatalogProvider extends ChangeNotifier {
     notifyListeners();
     try {
       final remote = await SupabaseService.fetchProducts();
-      if (remote.isNotEmpty) {
-        _all = remote;
+      // Prefer lighting catalog: keep remote if it looks like lighting taxonomy
+      final lightingRemote = remote
+          .where(
+            (p) =>
+                p.categoryId == 'indoor' ||
+                p.categoryId == 'outdoor' ||
+                p.categoryId == 'landscape' ||
+                p.categoryId == 'architectural' ||
+                p.categoryId == 'industrial' ||
+                p.categoryId == 'signage' ||
+                p.categoryId == 'underwater' ||
+                p.categoryId == 'accessories',
+          )
+          .toList();
+      if (lightingRemote.isNotEmpty) {
+        _all = lightingRemote;
         usingRemote = true;
+      } else {
+        _all = List.of(MockCatalog.products);
+        usingRemote = false;
       }
       try {
         final points = await SupabaseService.fetchPickupPoints();
@@ -327,14 +361,50 @@ class CatalogProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setCategory(ProductCategory? category) {
-    _selectedCategory = category;
+  void setCategory(String? categoryId, {String? subcategoryId}) {
+    _selectedCategoryId = categoryId;
+    _selectedSubcategoryId = subcategoryId;
+    notifyListeners();
+  }
+
+  void setSubcategory(String? subcategoryId) {
+    _selectedSubcategoryId = subcategoryId;
+    notifyListeners();
+  }
+
+  void clearFilters() {
+    _selectedCategoryId = null;
+    _selectedSubcategoryId = null;
     notifyListeners();
   }
 
   void setQuery(String value) {
     _query = value;
     notifyListeners();
+  }
+}
+
+class AuthProvider extends ChangeNotifier {
+  CustomerProfile? profile;
+
+  AuthProvider() {
+    refresh();
+    SupabaseService.client.auth.onAuthStateChange.listen((_) => refresh());
+  }
+
+  void refresh() {
+    profile = SupabaseService.currentProfile();
+    notifyListeners();
+  }
+
+  Future<void> signInWithGoogle() async {
+    await SupabaseService.signInWithGoogle();
+    refresh();
+  }
+
+  Future<void> signOut() async {
+    await SupabaseService.signOutToGuest();
+    refresh();
   }
 }
 

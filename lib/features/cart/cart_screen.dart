@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/formatters.dart';
+import '../../data/mock/lighting_taxonomy.dart';
 import '../../data/mock/mock_catalog.dart';
 import '../../data/models/models.dart';
 import '../../data/repositories/app_state.dart';
@@ -15,7 +16,10 @@ class CartScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cart = context.watch<CartProvider>();
+    final loyalty = context.watch<LoyaltyProvider>();
     final fee = MockCatalog.computeDeliveryFee(cart.subtotal, DeliveryMode.delivery);
+    final discount = loyalty.discountForSubtotal(cart.subtotal);
+    final total = (cart.subtotal - discount + fee).clamp(0, 1 << 31);
 
     if (cart.isEmpty) {
       return Center(
@@ -117,7 +121,9 @@ class CartScreen extends StatelessWidget {
           child: PriceSummary(
             subtotal: cart.subtotal,
             deliveryFee: fee,
-            total: cart.subtotal + fee,
+            loyaltyDiscount: discount,
+            loyaltyLabel: 'Fidélité ${loyalty.tier.label} (-${loyalty.tier.discountPercent}%)',
+            total: total,
           ),
         ),
         Padding(
