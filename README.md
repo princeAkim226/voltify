@@ -2,6 +2,12 @@
 
 Application mobile Flutter e-commerce pour la vente de matériel électronique au **Burkina Faso** (FCFA).
 
+## Liens
+
+- **Repo** : https://github.com/princeAkim226/voltify
+- **Télécharger l’APK** : https://voltify-download-bf.netlify.app
+- **Release GitHub** : https://github.com/princeAkim226/voltify/releases/tag/v1.0.0
+
 ## Fonctionnalités
 
 - Catalogue multi-catégories (smartphones, PC, TV, audio, accessoires, LED, électroménager)
