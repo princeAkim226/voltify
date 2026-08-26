@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Voltify Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <div id="login-view" class="login-wrap">
+    <div class="login-card">
+      <div class="brand">
+        <div class="brand-mark">⚡</div>
+        <h1>Voltify Admin</h1>
+        <p>Gérez le catalogue, les prix et les stocks</p>
+      </div>
+      <label>URL Supabase</label>
+      <input id="sb-url" type="url" value="https://rrrlkvcfxykyhscrswzi.supabase.co" />
+      <label>Clé service_role (session uniquement, non stockée sur le serveur)</label>
+      <input id="sb-key" type="password" placeholder="eyJhbGciOi…" autocomplete="off" />
+      <p class="hint">Settings → API → <strong>service_role</strong>. La clé reste dans ce navigateur uniquement.</p>
+      <button id="btn-login" class="btn primary">Connexion</button>
+      <p id="login-error" class="error" hidden></p>
+    </div>
+  </div>
+
+  <div id="app-view" class="app" hidden>
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <div class="brand-mark sm">⚡</div>
+        <div>
+          <strong>Voltify</strong>
+          <span>Administration</span>
+        </div>
+      </div>
+      <nav>
+        <button class="nav-item active" data-view="products">Produits</button>
+        <button class="nav-item" data-view="orders">Commandes</button>
+        <button class="nav-item" data-view="pickup">Points retrait</button>
+      </nav>
+      <button id="btn-logout" class="btn ghost">Déconnexion</button>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <h2 id="view-title">Produits</h2>
+          <p id="view-sub" class="muted">Catalogue synchronisé avec l’app mobile</p>
+        </div>
+        <div class="top-actions">
+          <input id="search" type="search" placeholder="Rechercher…" />
+          <button id="btn-new" class="btn primary">+ Nouveau produit</button>
+        </div>
+      </header>
+
+      <section id="products-view" class="panel">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Produit</th>
+                <th>Catégorie</th>
+                <th>Prix</th>
+                <th>Stock</th>
+                <th>Points</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="products-body">
+              <tr><td colspan="6" class="muted center">Chargement…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="orders-view" class="panel" hidden>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>N°</th>
+                <th>Client</th>
+                <th>Total</th>
+                <th>Paiement</th>
+                <th>Mode</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody id="orders-body"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="pickup-view" class="panel" hidden>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Nom</th>
+                <th>Ville</th>
+                <th>Adresse</th>
+                <th>Horaires</th>
+              </tr>
+            </thead>
+            <tbody id="pickup-body"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <dialog id="product-dialog">
+    <form id="product-form" method="dialog">
+      <h3 id="dialog-title">Nouveau produit</h3>
+      <input type="hidden" id="f-id-original" />
+      <div class="grid-2">
+        <div>
+          <label>ID produit *</label>
+          <input id="f-id" required placeholder="ex. s6" />
+        </div>
+        <div>
+          <label>Marque *</label>
+          <input id="f-brand" required />
+        </div>
+      </div>
+      <label>Nom *</label>
+      <input id="f-name" required />
+      <div class="grid-2">
+        <div>
+          <label>Catégorie *</label>
+          <select id="f-category" required>
+            <option value="smartphones">Smartphones</option>
+            <option value="ordinateurs">Ordinateurs</option>
+            <option value="tv">TV & Vidéo</option>
+            <option value="audio">Audio</option>
+            <option value="accessoires">Accessoires</option>
+            <option value="eclairage">Éclairage LED</option>
+            <option value="electromenager">Électroménager</option>
+          </select>
+        </div>
+        <div>
+          <label>Badge</label>
+          <input id="f-badge" placeholder="Promo, -20%…" />
+        </div>
+      </div>
+      <div class="grid-3">
+        <div>
+          <label>Prix FCFA *</label>
+          <input id="f-price" type="number" min="0" required />
+        </div>
+        <div>
+          <label>Ancien prix</label>
+          <input id="f-old-price" type="number" min="0" />
+        </div>
+        <div>
+          <label>Points fidélité</label>
+          <input id="f-points" type="number" min="0" value="50" />
+        </div>
+      </div>
+      <div class="grid-3">
+        <div>
+          <label>Note</label>
+          <input id="f-rating" type="number" min="0" max="5" step="0.1" value="4.5" />
+        </div>
+        <div>
+          <label>Avis</label>
+          <input id="f-reviews" type="number" min="0" value="0" />
+        </div>
+        <div>
+          <label>Piste points</label>
+          <select id="f-track">
+            <option value="lumineux">Lumineux</option>
+            <option value="deco">Déco</option>
+          </select>
+        </div>
+      </div>
+      <label>Description</label>
+      <textarea id="f-description" rows="3"></textarea>
+      <label>Caractéristiques (une par ligne)</label>
+      <textarea id="f-specs" rows="3" placeholder="6,6 AMOLED&#10;128 Go&#10;5000 mAh"></textarea>
+      <label class="check">
+        <input id="f-stock" type="checkbox" checked /> En stock
+      </label>
+      <div class="dialog-actions">
+        <button type="button" id="btn-cancel" class="btn ghost">Annuler</button>
+        <button type="submit" class="btn primary">Enregistrer</button>
+      </div>
+      <p id="form-error" class="error" hidden></p>
+    </form>
+  </dialog>
+
+  <script src="./app.js"></script>
+</body>
+</html>

@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/formatters.dart';
-import '../../data/mock/mock_catalog.dart';
 import '../../data/models/models.dart';
 import '../../data/repositories/app_state.dart';
 import '../../shared/widgets/common_widgets.dart';
@@ -15,7 +14,7 @@ class ProductDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final similar = MockCatalog.similarTo(product);
+    final similar = context.watch<CatalogProvider>().similarTo(product);
     final cart = context.watch<CartProvider>();
 
     return Scaffold(

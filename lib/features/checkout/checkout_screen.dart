@@ -127,7 +127,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 },
               ),
             ] else ...[
-              ...MockCatalog.pickupPoints.map((p) {
+              ...context.watch<CatalogProvider>().pickupPoints.map((p) {
                 final selected = draft.pickupPointId == p.id;
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 10),

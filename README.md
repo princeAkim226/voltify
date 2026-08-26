@@ -4,8 +4,9 @@ Application mobile Flutter e-commerce pour la vente de matériel électronique a
 
 ## Liens
 
-- **Repo** : https://github.com/princeAkim226/voltify
 - **Télécharger l’APK** : https://voltify-download-bf.netlify.app
+- **Admin catalogue** : https://voltify-admin-bf.netlify.app
+- **Repo** : https://github.com/princeAkim226/voltify
 - **Release GitHub** : https://github.com/princeAkim226/voltify/releases/tag/v1.0.0
 
 ## Fonctionnalités

@@ -94,6 +94,12 @@ class AccountScreen extends StatelessWidget {
         else
           ...orders.map((o) => _OrderTile(order: o)),
         const SizedBox(height: 24),
+          const ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: Icon(Icons.cloud_outlined, color: AppColors.primary),
+            title: Text('Backend', style: TextStyle(fontWeight: FontWeight.w700)),
+            subtitle: Text('Supabase · catalogue / commandes / points'),
+          ),
         const ListTile(
           contentPadding: EdgeInsets.zero,
           leading: Icon(Icons.info_outline_rounded, color: AppColors.primary),

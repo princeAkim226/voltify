@@ -21,6 +21,25 @@ class _MainShellState extends State<MainShell> {
   void _openCatalog() => setState(() => _index = 1);
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final catalog = context.read<CatalogProvider>();
+      if (!catalog.loading) {
+        await context.read<OrderProvider>().refreshFromRemote(catalog.productById);
+      } else {
+        void listener() {
+          if (!catalog.loading) {
+            catalog.removeListener(listener);
+            context.read<OrderProvider>().refreshFromRemote(catalog.productById);
+          }
+        }
+        catalog.addListener(listener);
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final cartCount = context.watch<CartProvider>().itemCount;
     final titles = ['Accueil', 'Catalogue', 'Panier', 'Compte'];

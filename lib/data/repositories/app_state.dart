@@ -6,6 +6,7 @@ import 'package:uuid/uuid.dart';
 
 import '../mock/mock_catalog.dart';
 import '../models/models.dart';
+import 'supabase_service.dart';
 
 class CartProvider extends ChangeNotifier {
   final List<CartItem> _items = [];
@@ -53,25 +54,49 @@ class LoyaltyProvider extends ChangeNotifier {
     _load();
   }
 
-  final LoyaltyBalance balance = LoyaltyBalance(lumineux: 180, deco: 95);
+  final LoyaltyBalance balance = LoyaltyBalance();
+  bool remoteSynced = false;
   static const _key = 'voltify_loyalty';
 
   Future<void> _load() async {
+    try {
+      final remote = await SupabaseService.fetchLoyalty();
+      balance.lumineux = remote.lumineux;
+      balance.deco = remote.deco;
+      remoteSynced = true;
+      await _saveLocal();
+      notifyListeners();
+      return;
+    } catch (_) {
+      // fallback local
+    }
+
     final prefs = await SharedPreferences.getInstance();
     final raw = prefs.getString(_key);
-    if (raw == null) return;
+    if (raw == null) {
+      notifyListeners();
+      return;
+    }
     final map = jsonDecode(raw) as Map<String, dynamic>;
-    balance.lumineux = map['lumineux'] as int? ?? balance.lumineux;
-    balance.deco = map['deco'] as int? ?? balance.deco;
+    balance.lumineux = map['lumineux'] as int? ?? 0;
+    balance.deco = map['deco'] as int? ?? 0;
     notifyListeners();
   }
 
-  Future<void> _save() async {
+  Future<void> _saveLocal() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(
       _key,
       jsonEncode({'lumineux': balance.lumineux, 'deco': balance.deco}),
     );
+  }
+
+  Future<void> _save() async {
+    await _saveLocal();
+    try {
+      await SupabaseService.saveLoyalty(balance);
+      remoteSynced = true;
+    } catch (_) {}
   }
 
   Future<Map<LoyaltyTrack, int>> awardForItems(List<CartItem> items) async {
@@ -102,12 +127,23 @@ class OrderProvider extends ChangeNotifier {
 
   List<OrderRecord> get orders => List.unmodifiable(_orders);
 
+  Future<void> refreshFromRemote(Map<String, Product> productById) async {
+    try {
+      final remote = await SupabaseService.fetchOrders(productById);
+      if (remote.isNotEmpty) {
+        _orders
+          ..clear()
+          ..addAll(remote);
+        await _persist();
+        notifyListeners();
+      }
+    } catch (_) {}
+  }
+
   Future<void> _load() async {
     final prefs = await SharedPreferences.getInstance();
     final raw = prefs.getString(_key);
     if (raw == null) return;
-    // Keep lightweight: only count restored via ids not full products for v1 persistence of totals
-    // Full history kept in memory during session; prefs stores summary JSON
     try {
       final list = jsonDecode(raw) as List<dynamic>;
       for (final entry in list) {
@@ -214,20 +250,38 @@ class OrderProvider extends ChangeNotifier {
     );
     _orders.insert(0, order);
     await _persist();
+    try {
+      await SupabaseService.placeOrder(order);
+    } catch (_) {
+      // commande conservée localement si hors-ligne / schéma absent
+    }
     notifyListeners();
     return order;
   }
 }
 
 class CatalogProvider extends ChangeNotifier {
+  CatalogProvider() {
+    load();
+  }
+
   ProductCategory? _selectedCategory;
   String _query = '';
+  List<Product> _all = List.of(MockCatalog.products);
+  List<PickupPoint> pickupPoints = List.of(MockCatalog.pickupPoints);
+  bool loading = true;
+  bool usingRemote = false;
+  String? error;
 
   ProductCategory? get selectedCategory => _selectedCategory;
   String get query => _query;
 
+  Map<String, Product> get productById => {for (final p in _all) p.id: p};
+
   List<Product> get products {
-    var list = MockCatalog.byCategory(_selectedCategory);
+    var list = _selectedCategory == null
+        ? _all
+        : _all.where((p) => p.category == _selectedCategory).toList();
     if (_query.trim().isNotEmpty) {
       final q = _query.trim().toLowerCase();
       list = list
@@ -239,6 +293,38 @@ class CatalogProvider extends ChangeNotifier {
           .toList();
     }
     return list;
+  }
+
+  List<Product> get featured => _all.where((p) => p.badge != null).take(8).toList();
+
+  List<Product> similarTo(Product product, {int limit = 6}) {
+    final sameBrand = _all.where((p) => p.id != product.id && p.brand == product.brand);
+    final sameCategory =
+        _all.where((p) => p.id != product.id && p.category == product.category && p.brand != product.brand);
+    return [...sameBrand, ...sameCategory].take(limit).toList();
+  }
+
+  Future<void> load() async {
+    loading = true;
+    error = null;
+    notifyListeners();
+    try {
+      final remote = await SupabaseService.fetchProducts();
+      if (remote.isNotEmpty) {
+        _all = remote;
+        usingRemote = true;
+      }
+      try {
+        final points = await SupabaseService.fetchPickupPoints();
+        if (points.isNotEmpty) pickupPoints = points;
+      } catch (_) {}
+    } catch (e) {
+      usingRemote = false;
+      error = e.toString();
+      _all = List.of(MockCatalog.products);
+    }
+    loading = false;
+    notifyListeners();
   }
 
   void setCategory(ProductCategory? category) {

@@ -48,7 +48,8 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final loyalty = context.watch<LoyaltyProvider>().balance;
-    final featured = MockCatalog.featured();
+    final catalog = context.watch<CatalogProvider>();
+    final featured = catalog.featured;
 
     return CustomScrollView(
       slivers: [
@@ -221,26 +222,40 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         SliverPadding(
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 30),
-          sliver: SliverGrid(
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              mainAxisSpacing: 12,
-              crossAxisSpacing: 12,
-              childAspectRatio: 0.68,
-            ),
-            delegate: SliverChildBuilderDelegate(
-              (context, index) {
-                final product = featured[index];
-                return ProductCard(
-                  product: product,
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => ProductDetailScreen(product: product)),
+          sliver: catalog.loading
+              ? const SliverToBoxAdapter(
+                  child: Padding(
+                    padding: EdgeInsets.all(40),
+                    child: Center(child: CircularProgressIndicator()),
                   ),
-                );
-              },
-              childCount: featured.length,
-            ),
-          ),
+                )
+              : featured.isEmpty
+                  ? const SliverToBoxAdapter(
+                      child: Padding(
+                        padding: EdgeInsets.all(24),
+                        child: Text('Aucun produit pour le moment'),
+                      ),
+                    )
+                  : SliverGrid(
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        mainAxisSpacing: 12,
+                        crossAxisSpacing: 12,
+                        childAspectRatio: 0.68,
+                      ),
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) {
+                          final product = featured[index];
+                          return ProductCard(
+                            product: product,
+                            onTap: () => Navigator.of(context).push(
+                              MaterialPageRoute(builder: (_) => ProductDetailScreen(product: product)),
+                            ),
+                          );
+                        },
+                        childCount: featured.length,
+                      ),
+                    ),
         ),
       ],
     );
