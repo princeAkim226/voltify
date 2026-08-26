@@ -1,17 +1,20 @@
-# Voltify Admin — catalogue & commandes
+# Voltify Admin
 
-Interface web pour administrer les produits Voltify (prix, description, stock, badges, etc.).
+Connexion par **identifiant / mot de passe** (plus de clé à coller).
 
-## Utilisation locale
+## Accès
 
-Ouvrez `admin/index.html` via un serveur local, ou déployez le dossier `admin/` sur Netlify.
+- URL : https://voltify-admin-bf.netlify.app
+- Identifiant : `admin`
+- Mot de passe : `Voltify@2026`
 
-1. Collez l’URL Supabase
-2. Collez la clé **service_role** (Settings → API)
-3. Gérez les produits (créer / éditer / supprimer)
+Changez ces valeurs dans Netlify → Site settings → Environment variables :
+`ADMIN_USERNAME`, `ADMIN_PASSWORD`.
 
-La clé reste dans `sessionStorage` du navigateur uniquement.
+## Fonctionnalités
 
-## Prérequis Supabase
+- CRUD produits (prix, description, stock, badges, points…)
+- Consultation commandes
+- Points de retrait
 
-Exécutez `docs/supabase_setup_all.sql` si les tables n’existent pas encore.
+La clé Supabase `service_role` reste côté serveur Netlify uniquement.

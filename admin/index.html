@@ -8,7 +8,6 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="./styles.css" />
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
   <div id="login-view" class="login-wrap">
@@ -18,11 +17,10 @@
         <h1>Voltify Admin</h1>
         <p>Gérez le catalogue, les prix et les stocks</p>
       </div>
-      <label>URL Supabase</label>
-      <input id="sb-url" type="url" value="https://rrrlkvcfxykyhscrswzi.supabase.co" />
-      <label>Clé service_role (session uniquement, non stockée sur le serveur)</label>
-      <input id="sb-key" type="password" placeholder="eyJhbGciOi…" autocomplete="off" />
-      <p class="hint">Settings → API → <strong>service_role</strong>. La clé reste dans ce navigateur uniquement.</p>
+      <label>Identifiant</label>
+      <input id="username" type="text" autocomplete="username" placeholder="admin" />
+      <label>Mot de passe</label>
+      <input id="password" type="password" autocomplete="current-password" placeholder="••••••••" />
       <button id="btn-login" class="btn primary">Connexion</button>
       <p id="login-error" class="error" hidden></p>
     </div>
@@ -34,7 +32,7 @@
         <div class="brand-mark sm">⚡</div>
         <div>
           <strong>Voltify</strong>
-          <span>Administration</span>
+          <span id="admin-name">Administration</span>
         </div>
       </div>
       <nav>

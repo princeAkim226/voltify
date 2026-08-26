@@ -1,4 +1,5 @@
-const STORAGE_KEY = 'voltify_admin_session';
+const STORAGE_KEY = 'voltify_admin_token';
+const API = '/.netlify/functions/admin-api';
 
 const loginView = document.getElementById('login-view');
 const appView = document.getElementById('app-view');
@@ -7,7 +8,7 @@ const formError = document.getElementById('form-error');
 const dialog = document.getElementById('product-dialog');
 const form = document.getElementById('product-form');
 
-let supabase = null;
+let token = sessionStorage.getItem(STORAGE_KEY) || '';
 let products = [];
 let currentView = 'products';
 
@@ -32,63 +33,73 @@ function showError(el, msg) {
   el.textContent = msg || '';
 }
 
-function getSession() {
-  try {
-    return JSON.parse(sessionStorage.getItem(STORAGE_KEY) || 'null');
-  } catch {
-    return null;
-  }
+function escapeHtml(str) {
+  return String(str ?? '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;');
 }
 
-function saveSession(url, key) {
-  sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ url, key }));
-}
-
-function clearSession() {
-  sessionStorage.removeItem(STORAGE_KEY);
-}
-
-function createClient(url, key) {
-  return window.supabase.createClient(url, key, {
-    auth: { persistSession: false, autoRefreshToken: false },
+async function api(action, { method = 'GET', body, id } = {}) {
+  const url = new URL(API, window.location.origin);
+  url.searchParams.set('action', action);
+  if (id) url.searchParams.set('id', id);
+  const res = await fetch(url.toString(), {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: body ? JSON.stringify(body) : undefined,
   });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const err = new Error(data.error || `Erreur ${res.status}`);
+    err.status = res.status;
+    throw err;
+  }
+  return data;
 }
 
-async function connect(url, key) {
-  supabase = createClient(url, key);
-  const { error } = await supabase.from('products').select('id').limit(1);
-  if (error) throw error;
-  saveSession(url, key);
+function enterApp(username) {
   loginView.hidden = true;
   appView.hidden = false;
-  await refreshAll();
+  document.getElementById('admin-name').textContent = username || 'Administrateur';
+}
+
+function logout() {
+  token = '';
+  sessionStorage.removeItem(STORAGE_KEY);
+  appView.hidden = true;
+  loginView.hidden = false;
+  document.getElementById('password').value = '';
 }
 
 document.getElementById('btn-login').addEventListener('click', async () => {
   showError(loginError, '');
-  const url = document.getElementById('sb-url').value.trim();
-  const key = document.getElementById('sb-key').value.trim();
-  if (!url || !key) {
-    showError(loginError, 'URL et clé service_role requis.');
+  const username = document.getElementById('username').value.trim();
+  const password = document.getElementById('password').value;
+  if (!username || !password) {
+    showError(loginError, 'Identifiant et mot de passe requis.');
     return;
   }
   try {
-    await connect(url, key);
+    const data = await api('login', { method: 'POST', body: { username, password } });
+    token = data.token;
+    sessionStorage.setItem(STORAGE_KEY, token);
+    enterApp(data.username);
+    await refreshAll();
   } catch (e) {
-    showError(
-      loginError,
-      (e && e.message) ||
-        'Connexion impossible. Vérifiez la clé et que les tables existent (docs/supabase_setup_all.sql).',
-    );
+    showError(loginError, e.message || 'Connexion impossible');
   }
 });
 
-document.getElementById('btn-logout').addEventListener('click', () => {
-  clearSession();
-  supabase = null;
-  appView.hidden = true;
-  loginView.hidden = false;
+document.getElementById('password').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') document.getElementById('btn-login').click();
 });
+
+document.getElementById('btn-logout').addEventListener('click', logout);
 
 document.querySelectorAll('.nav-item').forEach((btn) => {
   btn.addEventListener('click', () => {
@@ -111,9 +122,7 @@ document.querySelectorAll('.nav-item').forEach((btn) => {
 });
 
 document.getElementById('search').addEventListener('input', () => renderProducts());
-
 document.getElementById('btn-new').addEventListener('click', () => openProductDialog());
-
 document.getElementById('btn-cancel').addEventListener('click', () => dialog.close());
 
 form.addEventListener('submit', async (e) => {
@@ -145,11 +154,9 @@ form.addEventListener('submit', async (e) => {
   const originalId = document.getElementById('f-id-original').value;
   try {
     if (originalId && originalId !== payload.id) {
-      const { error: delErr } = await supabase.from('products').delete().eq('id', originalId);
-      if (delErr) throw delErr;
+      await api('products', { method: 'DELETE', id: originalId });
     }
-    const { error } = await supabase.from('products').upsert(payload);
-    if (error) throw error;
+    await api('products', { method: 'POST', body: payload });
     dialog.close();
     await loadProducts();
   } catch (err) {
@@ -162,7 +169,6 @@ function openProductDialog(product) {
   document.getElementById('dialog-title').textContent = product ? 'Modifier le produit' : 'Nouveau produit';
   document.getElementById('f-id-original').value = product?.id || '';
   document.getElementById('f-id').value = product?.id || '';
-  document.getElementById('f-id').disabled = false;
   document.getElementById('f-name').value = product?.name || '';
   document.getElementById('f-brand').value = product?.brand || '';
   document.getElementById('f-category').value = product?.category_id || 'smartphones';
@@ -180,8 +186,7 @@ function openProductDialog(product) {
 }
 
 async function loadProducts() {
-  const { data, error } = await supabase.from('products').select('*').order('name');
-  if (error) throw error;
+  const { data } = await api('products');
   products = data || [];
   renderProducts();
 }
@@ -231,23 +236,18 @@ function renderProducts() {
   body.querySelectorAll('[data-del]').forEach((btn) => {
     btn.addEventListener('click', async () => {
       if (!confirm('Supprimer ce produit ?')) return;
-      const { error } = await supabase.from('products').delete().eq('id', btn.dataset.del);
-      if (error) {
-        alert(error.message);
-        return;
+      try {
+        await api('products', { method: 'DELETE', id: btn.dataset.del });
+        await loadProducts();
+      } catch (e) {
+        alert(e.message);
       }
-      await loadProducts();
     });
   });
 }
 
 async function loadOrders() {
-  const { data, error } = await supabase
-    .from('orders')
-    .select('*')
-    .order('created_at', { ascending: false })
-    .limit(100);
-  if (error) throw error;
+  const { data } = await api('orders');
   const body = document.getElementById('orders-body');
   if (!data?.length) {
     body.innerHTML = '<tr><td colspan="6" class="muted center">Aucune commande</td></tr>';
@@ -272,8 +272,7 @@ async function loadOrders() {
 }
 
 async function loadPickup() {
-  const { data, error } = await supabase.from('pickup_points').select('*').order('city');
-  if (error) throw error;
+  const { data } = await api('pickup');
   const body = document.getElementById('pickup-body');
   if (!data?.length) {
     body.innerHTML = '<tr><td colspan="4" class="muted center">Aucun point de retrait</td></tr>';
@@ -293,24 +292,16 @@ async function loadPickup() {
 }
 
 async function refreshAll() {
-  await Promise.all([loadProducts(), loadOrders().catch(() => {}), loadPickup().catch(() => {})]);
-}
-
-function escapeHtml(str) {
-  return String(str ?? '')
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;');
+  await loadProducts();
+  await Promise.all([loadOrders().catch(() => {}), loadPickup().catch(() => {})]);
 }
 
 (async function boot() {
-  const session = getSession();
-  if (!session?.url || !session?.key) return;
-  document.getElementById('sb-url').value = session.url;
+  if (!token) return;
   try {
-    await connect(session.url, session.key);
-  } catch {
-    clearSession();
+    enterApp('Administrateur');
+    await refreshAll();
+  } catch (e) {
+    if (e.status === 401) logout();
   }
 })();
