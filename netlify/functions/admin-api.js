@@ -195,6 +195,34 @@ exports.handler = async (event) => {
       return json(200, { data });
     }
 
+    // Demandes de devis déposées depuis l'app (menuiserie, enseignes, pergolas).
+    // Sans cette vue, le sur-mesure arrive en base et personne ne le voit.
+    if (action === 'quotes' && event.httpMethod === 'GET') {
+      const data = await supabaseRequest(
+        'quote_requests?select=*&order=created_at.desc&limit=200',
+      );
+      return json(200, { data });
+    }
+
+    if (action === 'quotes' && event.httpMethod === 'POST') {
+      const id = qs.id;
+      if (!id) return json(400, { error: 'id requis' });
+      const body = JSON.parse(event.body || '{}');
+      const allowed = ['nouveau', 'en_cours', 'devis_envoye', 'gagne', 'perdu'];
+      if (!allowed.includes(body.status)) {
+        return json(400, { error: 'Statut inconnu' });
+      }
+      const data = await supabaseRequest(
+        `quote_requests?id=eq.${encodeURIComponent(id)}`,
+        {
+          method: 'PATCH',
+          body: { status: body.status },
+          prefer: 'return=representation',
+        },
+      );
+      return json(200, { data });
+    }
+
     if (action === 'pickup' && event.httpMethod === 'GET') {
       const data = await supabaseRequest('pickup_points?select=*&order=city.asc');
       return json(200, { data });

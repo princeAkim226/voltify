@@ -41,6 +41,7 @@
       <nav>
         <button class="nav-item active" data-view="products">Produits</button>
         <button class="nav-item" data-view="orders">Commandes</button>
+        <button class="nav-item" data-view="quotes">Devis <span id="quotes-badge" class="badge" hidden>0</span></button>
         <button class="nav-item" data-view="pickup">Points retrait</button>
       </nav>
       <button id="btn-logout" class="btn ghost">Déconnexion</button>
@@ -92,6 +93,24 @@
               </tr>
             </thead>
             <tbody id="orders-body"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="quotes-view" class="panel" hidden>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Client</th>
+                <th>Demande</th>
+                <th>Ville</th>
+                <th>Projet</th>
+                <th>Suivi</th>
+              </tr>
+            </thead>
+            <tbody id="quotes-body"></tbody>
           </table>
         </div>
       </section>
@@ -180,6 +199,14 @@
           <select id="f-track">
             <option value="lumineux">Lumineux</option>
             <option value="deco">Déco</option>
+          </select>
+        </div>
+        <div>
+          <label>Mode de vente</label>
+          <select id="f-sale-mode">
+            <option value="">Automatique (selon le rayon)</option>
+            <option value="panier">Vente directe (prix ferme)</option>
+            <option value="devis">Sur devis</option>
           </select>
         </div>
       </div>

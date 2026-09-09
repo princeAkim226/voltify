@@ -292,3 +292,29 @@ dialog::backdrop { background: rgba(0,0,0,0.65); }
   nav { display: flex; flex: 1; }
   .grid-2, .grid-3 { grid-template-columns: 1fr; }
 }
+
+/* Demandes de devis */
+.nav-item .badge {
+  margin-left: 6px;
+  padding: 2px 7px;
+  background: rgba(227, 93, 106, 0.2);
+  color: #ffb4bc;
+  font-size: 0.7rem;
+}
+.row-new { background: rgba(250, 199, 117, 0.06); }
+.quote-details {
+  max-width: 320px;
+  color: var(--muted);
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+.quote-status {
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: inherit;
+  font-weight: 700;
+  font-size: 0.82rem;
+}
+.quote-status:disabled { opacity: 0.5; }

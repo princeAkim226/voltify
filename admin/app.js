@@ -215,12 +215,14 @@ document.querySelectorAll('.nav-item').forEach((btn) => {
     currentView = btn.dataset.view;
     document.getElementById('products-view').hidden = currentView !== 'products';
     document.getElementById('orders-view').hidden = currentView !== 'orders';
+    document.getElementById('quotes-view').hidden = currentView !== 'quotes';
     document.getElementById('pickup-view').hidden = currentView !== 'pickup';
     document.getElementById('btn-new').hidden = currentView !== 'products';
     document.getElementById('search').hidden = currentView !== 'products';
     const titles = {
       products: ['Produits', 'Catalogue synchronisé avec l’app mobile'],
-      orders: ['Commandes', 'Histor des commandes clients'],
+      orders: ['Commandes', 'Historique des commandes clients'],
+      quotes: ['Demandes de devis', 'Sur-mesure : menuiserie, enseignes, pergolas, vitrerie'],
       pickup: ['Points de retrait', 'Magasins Voltify'],
     };
     document.getElementById('view-title').textContent = titles[currentView][0];
@@ -252,6 +254,8 @@ form.addEventListener('submit', async (e) => {
     in_stock: document.getElementById('f-stock').checked,
     points_reward: Number(document.getElementById('f-points').value || 50),
     loyalty_track: document.getElementById('f-track').value,
+    // Vide = l'article suit le mode de vente de son rayon, comme dans l'app.
+    sale_mode: document.getElementById('f-sale-mode').value || null,
     image_url: document.getElementById('f-image-url').value || null,
     specs: document
       .getElementById('f-specs')
@@ -288,6 +292,7 @@ function openProductDialog(product) {
   document.getElementById('f-rating').value = product?.rating ?? 4.5;
   document.getElementById('f-reviews').value = product?.review_count ?? 0;
   document.getElementById('f-track').value = product?.loyalty_track || 'lumineux';
+  document.getElementById('f-sale-mode').value = product?.sale_mode || '';
   document.getElementById('f-description').value = product?.description || '';
   document.getElementById('f-specs').value = Array.isArray(product?.specs) ? product.specs.join('\n') : '';
   document.getElementById('f-stock').checked = product?.in_stock !== false;
@@ -390,6 +395,85 @@ async function loadOrders() {
     .join('');
 }
 
+const QUOTE_STATUSES = [
+  { id: 'nouveau', label: 'Nouveau' },
+  { id: 'en_cours', label: 'En cours' },
+  { id: 'devis_envoye', label: 'Devis envoyé' },
+  { id: 'gagne', label: 'Gagné' },
+  { id: 'perdu', label: 'Perdu' },
+];
+
+function subcategoryLabel(categoryId, subId) {
+  const cat = TAXONOMY.find((c) => c.id === categoryId);
+  const sub = cat?.children.find((s) => s.id === subId);
+  if (!cat) return categoryId || '';
+  return sub ? `${cat.label} · ${sub.label}` : cat.label;
+}
+
+async function loadQuotes() {
+  const { data } = await api('quotes');
+  const body = document.getElementById('quotes-body');
+  const badge = document.getElementById('quotes-badge');
+
+  // On met en avant ce qui n'a pas encore été traité : une demande de devis
+  // non rappelée sous 48 h est un chantier perdu.
+  const pending = (data || []).filter((q) => (q.status || 'nouveau') === 'nouveau').length;
+  badge.hidden = pending === 0;
+  badge.textContent = String(pending);
+
+  if (!data?.length) {
+    body.innerHTML = '<tr><td colspan="6" class="muted center">Aucune demande de devis</td></tr>';
+    return;
+  }
+
+  body.innerHTML = data
+    .map((q) => {
+      const status = q.status || 'nouveau';
+      const options = QUOTE_STATUSES.map(
+        (s) => `<option value="${s.id}"${s.id === status ? ' selected' : ''}>${s.label}</option>`,
+      ).join('');
+      return `
+      <tr${status === 'nouveau' ? ' class="row-new"' : ''}>
+        <td>${q.created_at ? new Date(q.created_at).toLocaleString('fr-FR') : ''}</td>
+        <td>
+          <div class="product-name">${escapeHtml(q.customer_name || '')}</div>
+          <div class="product-brand">${escapeHtml(q.phone || '')}</div>
+        </td>
+        <td>
+          <div class="product-name">${escapeHtml(q.product_name || '')}</div>
+          <div class="product-brand">${escapeHtml(subcategoryLabel(q.category_id, q.subcategory_id))}</div>
+        </td>
+        <td>${escapeHtml(q.city || '')}</td>
+        <td class="quote-details">${escapeHtml(q.details || '')}</td>
+        <td>
+          <select class="quote-status" data-id="${escapeHtml(q.id)}">${options}</select>
+        </td>
+      </tr>`;
+    })
+    .join('');
+
+  body.querySelectorAll('.quote-status').forEach((sel) => {
+    sel.addEventListener('change', async () => {
+      const previous = sel.dataset.previous || '';
+      try {
+        sel.disabled = true;
+        await api('quotes', {
+          method: 'POST',
+          id: sel.dataset.id,
+          body: { status: sel.value },
+        });
+        await loadQuotes();
+      } catch (err) {
+        if (previous) sel.value = previous;
+        alert(err.message || 'Mise à jour impossible');
+      } finally {
+        sel.disabled = false;
+      }
+    });
+    sel.dataset.previous = sel.value;
+  });
+}
+
 async function loadPickup() {
   const { data } = await api('pickup');
   const body = document.getElementById('pickup-body');
@@ -412,7 +496,11 @@ async function loadPickup() {
 
 async function refreshAll() {
   await loadProducts();
-  await Promise.all([loadOrders().catch(() => {}), loadPickup().catch(() => {})]);
+  await Promise.all([
+    loadOrders().catch(() => {}),
+    loadQuotes().catch(() => {}),
+    loadPickup().catch(() => {}),
+  ]);
 }
 
 (async function boot() {
