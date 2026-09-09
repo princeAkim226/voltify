@@ -92,10 +92,45 @@ netlify deploy --prod --dir web_download \
   --site 6bd79847-4cf9-461a-a72d-73923d57a319      # voltify-download-bf
 ```
 
-Avant de publier le site de téléchargement : copier l'APK dans
-`web_download/voltify.apk` **et** mettre à jour la version et la taille
-affichées dans `web_download/index.html`. La page ne doit jamais annoncer une
-version qui n'est pas celle du fichier servi.
+### Publier une nouvelle version de l'app
+
+Dans cet ordre :
+
+```bash
+cp <apk-telecharge> web_download/voltify.apk   # 1. l'APK construit par la CI
+node scripts/make_version_json.mjs             # 2. le manifeste, depuis l'APK réel
+                                               # 3. version + taille dans index.html
+netlify deploy --prod --dir web_download --site 6bd79847-4cf9-461a-a72d-73923d57a319
+```
+
+L'étape 2 lit `pubspec.yaml` et la taille réelle du fichier : elle refuse de
+produire un manifeste incohérent. Ne l'écrivez jamais à la main.
+
+La page et le manifeste ne doivent jamais annoncer une version différente de
+l'APK servi à côté d'eux.
+
+## Mise à jour de l'app
+
+Voltify se distribue hors Play Store : personne ne prévient l'utilisateur, et
+Android interdit à une app d'en installer une autre sans son accord. Une mise
+à jour vraiment silencieuse est donc impossible.
+
+Ce que fait l'app à la place (`lib/core/services/update_service.dart`) : au
+lancement, elle lit `version.json` sur le site de téléchargement, compare le
+`build` au sien, et propose la mise à jour — elle télécharge l'APK et ouvre
+l'installateur système. Le client confirme d'un appui.
+
+`minBuild` dans le manifeste rend la mise à jour **obligatoire** en dessous
+d'un certain build : l'écran bloque l'app. À utiliser quand une version
+ancienne ne sait plus lire les données en production, pas pour forcer une
+nouveauté.
+
+La vérification échoue en silence : réseau coupé, manifeste absent ou
+malformé, la boutique s'ouvre normalement.
+
+⚠️ Le contrôle de version doit être **dans** l'APK installé pour agir. Les
+versions antérieures au build 2 ne l'ont pas : leurs utilisateurs doivent
+installer 1.3.0 à la main une dernière fois.
 
 ## Stack
 

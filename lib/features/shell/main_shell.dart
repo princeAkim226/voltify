@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../core/services/update_service.dart';
 import '../../data/repositories/app_state.dart';
 import '../account/account_screen.dart';
 import '../cart/cart_screen.dart';
 import '../catalog/catalog_screen.dart';
 import '../home/home_screen.dart';
+import '../update/update_sheet.dart';
 
 class MainShell extends StatefulWidget {
   const MainShell({super.key});
@@ -37,6 +39,17 @@ class _MainShellState extends State<MainShell> {
         catalog.addListener(listener);
       }
     });
+    _checkForUpdate();
+  }
+
+  /// Vérification silencieuse au lancement : si le réseau ne répond pas, la
+  /// boutique s'ouvre normalement et on réessaiera au prochain démarrage.
+  Future<void> _checkForUpdate() async {
+    final release = await UpdateService.checkForUpdate();
+    if (release == null || !mounted) return;
+    final blocking = await UpdateService.isBlocking(release);
+    if (!mounted) return;
+    await UpdateSheet.show(context, release: release, blocking: blocking);
   }
 
   @override
