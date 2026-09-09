@@ -1,10 +1,11 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 
-import '../mock/lighting_taxonomy.dart';
+import '../mock/catalog_taxonomy.dart';
 import '../mock/mock_catalog.dart';
 import '../models/models.dart';
 import 'supabase_service.dart';
@@ -300,16 +301,31 @@ class CatalogProvider extends ChangeNotifier {
     }
     if (_query.trim().isNotEmpty) {
       final q = _query.trim().toLowerCase();
-      list = list
-          .where(
-            (p) =>
-                p.name.toLowerCase().contains(q) ||
-                p.brand.toLowerCase().contains(q),
-          )
-          .toList();
+      list = list.where((p) => _matches(p, q)).toList();
     }
     return list;
   }
+
+  /// Un produit répond aussi au vocabulaire de son rayon : chercher
+  /// « charnière » remonte la quincaillerie même sans produit ainsi nommé.
+  bool _matches(Product p, String q) {
+    if (p.name.toLowerCase().contains(q)) return true;
+    if (p.brand.toLowerCase().contains(q)) return true;
+    final label = CatalogTaxonomy.labelFor(
+      categoryId: p.categoryId,
+      subcategoryId: p.subcategoryId,
+    );
+    if (label.toLowerCase().contains(q)) return true;
+    final sub = p.subcategoryId == null
+        ? null
+        : CatalogTaxonomy.subById(p.categoryId, p.subcategoryId!);
+    return sub?.families.any((f) => f.toLowerCase().contains(q)) ?? false;
+  }
+
+  /// Familles du catalogue correspondant à la recherche, même si aucun
+  /// produit ne les porte encore — sert à orienter vers le bon rayon.
+  List<FamilyHit> get familySuggestions =>
+      CatalogTaxonomy.searchFamilies(_query, limit: 6);
 
   List<Product> get featured => _all.where((p) => p.badge != null).take(8).toList();
 
@@ -327,22 +343,13 @@ class CatalogProvider extends ChangeNotifier {
     notifyListeners();
     try {
       final remote = await SupabaseService.fetchProducts();
-      // Prefer lighting catalog: keep remote if it looks like lighting taxonomy
-      final lightingRemote = remote
-          .where(
-            (p) =>
-                p.categoryId == 'indoor' ||
-                p.categoryId == 'outdoor' ||
-                p.categoryId == 'landscape' ||
-                p.categoryId == 'architectural' ||
-                p.categoryId == 'industrial' ||
-                p.categoryId == 'signage' ||
-                p.categoryId == 'underwater' ||
-                p.categoryId == 'accessories',
-          )
-          .toList();
-      if (lightingRemote.isNotEmpty) {
-        _all = lightingRemote;
+      // On ne garde le catalogue distant que s'il parle bien la taxonomie
+      // matériel : un reliquat d'un ancien catalogue viderait la boutique.
+      final knownIds = CatalogTaxonomy.categoryIds;
+      final materialRemote =
+          remote.where((p) => knownIds.contains(p.categoryId)).toList();
+      if (materialRemote.isNotEmpty) {
+        _all = materialRemote;
         usingRemote = true;
       } else {
         _all = List.of(MockCatalog.products);
@@ -442,5 +449,105 @@ class CheckoutDraft extends ChangeNotifier {
   void resetPayment() {
     paymentMethod = null;
     notifyListeners();
+  }
+}
+
+/// Demandes de devis déposées depuis l'app.
+///
+/// Persistées en local : elles doivent survivre à une coupure réseau, un
+/// client au Burkina ne redemandera pas son devis une deuxième fois.
+class QuoteProvider extends ChangeNotifier {
+  QuoteProvider() {
+    _load();
+  }
+
+  final List<QuoteRequest> _requests = [];
+  static const _key = 'voltify_quotes';
+  final _uuid = const Uuid();
+
+  List<QuoteRequest> get requests => List.unmodifiable(_requests);
+  bool get isEmpty => _requests.isEmpty;
+
+  Future<void> _load() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(_key);
+    if (raw == null) return;
+    try {
+      final list = jsonDecode(raw) as List<dynamic>;
+      _requests
+        ..clear()
+        ..addAll(
+          list.map((e) => QuoteRequest.fromJson(e as Map<String, dynamic>)),
+        );
+      notifyListeners();
+      unawaited(_pushPending());
+    } catch (_) {}
+  }
+
+  /// Rejoue les demandes restées bloquées faute de réseau.
+  Future<void> _pushPending() async {
+    final pending = _requests.where((q) => !q.synced).toList();
+    if (pending.isEmpty) return;
+    var changed = false;
+    for (final q in pending) {
+      if (await _push(q)) changed = true;
+    }
+    if (changed) {
+      notifyListeners();
+      await _persist();
+    }
+  }
+
+  Future<bool> _push(QuoteRequest request) async {
+    try {
+      await SupabaseService.submitQuote(request);
+      request.synced = true;
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<void> _persist() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(
+      _key,
+      jsonEncode(_requests.map((q) => q.toJson()).toList()),
+    );
+  }
+
+  Future<QuoteRequest> submit({
+    required Product product,
+    required String customerName,
+    required String phone,
+    String? email,
+    String? city,
+    String details = '',
+  }) async {
+    final request = QuoteRequest(
+      id: _uuid.v4(),
+      productId: product.id,
+      productName: product.name,
+      categoryId: product.categoryId,
+      subcategoryId: product.subcategoryId,
+      customerName: customerName,
+      phone: phone,
+      email: email,
+      city: city,
+      details: details,
+      createdAt: DateTime.now(),
+    );
+    // On persiste d'abord : une demande perdue sur un réseau capricieux, c'est
+    // un client perdu. L'envoi au commerce vient ensuite, et se rejoue au
+    // prochain lancement s'il échoue.
+    _requests.insert(0, request);
+    notifyListeners();
+    await _persist();
+
+    if (await _push(request)) {
+      notifyListeners();
+      await _persist();
+    }
+    return request;
   }
 }

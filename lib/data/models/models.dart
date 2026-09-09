@@ -1,3 +1,5 @@
+import '../mock/catalog_taxonomy.dart';
+
 enum LoyaltyTrack { lumineux, deco }
 
 class Product {
@@ -18,6 +20,7 @@ class Product {
     this.pointsReward = 50,
     this.imageUrl,
     this.loyaltyTrack = LoyaltyTrack.lumineux,
+    this.saleModeOverride,
   });
 
   final String id;
@@ -36,6 +39,20 @@ class Product {
   final int pointsReward;
   final String? imageUrl;
   final LoyaltyTrack loyaltyTrack;
+
+  /// Force le mode de vente d'un article, sinon la sous-catégorie décide.
+  final SaleMode? saleModeOverride;
+
+  /// Panier ou devis. Par défaut, hérité de la sous-catégorie du catalogue.
+  SaleMode get saleMode =>
+      saleModeOverride ??
+      CatalogTaxonomy.saleModeFor(
+        categoryId: categoryId,
+        subcategoryId: subcategoryId,
+      );
+
+  /// Un article sur devis n'a pas de prix ferme : il ne va pas au panier.
+  bool get isQuoteOnly => saleMode.isDevis;
 
   bool get hasDiscount => oldPrice != null && oldPrice! > price;
 
@@ -184,6 +201,79 @@ class LoyaltyBalance {
       deco += points;
     }
   }
+}
+
+/// Demande de devis pour un article sur mesure (menuiserie, enseigne, pergola…).
+class QuoteRequest {
+  QuoteRequest({
+    required this.id,
+    required this.productId,
+    required this.productName,
+    required this.categoryId,
+    required this.customerName,
+    required this.phone,
+    required this.createdAt,
+    this.subcategoryId,
+    this.email,
+    this.city,
+    this.details = '',
+    this.synced = false,
+  });
+
+  final String id;
+  final String productId;
+  final String productName;
+  final String categoryId;
+  final String? subcategoryId;
+  final String customerName;
+  final String phone;
+  final String? email;
+  final String? city;
+
+  /// Dimensions, matériau souhaité, délai — le texte libre du client.
+  final String details;
+  final DateTime createdAt;
+
+  /// La demande est-elle arrivée jusqu'au commerce ?
+  /// Faux tant que l'envoi Supabase n'a pas abouti — le réseau au Burkina
+  /// coupe souvent, la demande est rejouée au prochain lancement.
+  bool synced;
+
+  String get categoryLabel => CatalogTaxonomy.labelFor(
+        categoryId: categoryId,
+        subcategoryId: subcategoryId,
+      );
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'productId': productId,
+        'productName': productName,
+        'categoryId': categoryId,
+        'subcategoryId': subcategoryId,
+        'customerName': customerName,
+        'phone': phone,
+        'email': email,
+        'city': city,
+        'details': details,
+        'createdAt': createdAt.toIso8601String(),
+        'synced': synced,
+      };
+
+  factory QuoteRequest.fromJson(Map<String, dynamic> m) => QuoteRequest(
+        id: m['id'] as String,
+        productId: m['productId'] as String? ?? '',
+        productName: m['productName'] as String? ?? '',
+        categoryId: m['categoryId'] as String? ?? '',
+        subcategoryId: m['subcategoryId'] as String?,
+        customerName: m['customerName'] as String? ?? '',
+        phone: m['phone'] as String? ?? '',
+        email: m['email'] as String?,
+        city: m['city'] as String?,
+        details: m['details'] as String? ?? '',
+        createdAt:
+            DateTime.tryParse(m['createdAt'] as String? ?? '') ?? DateTime.now(),
+        synced: m['synced'] as bool? ?? false,
+      );
 }
 
 class CustomerProfile {

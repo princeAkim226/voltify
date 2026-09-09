@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/theme/app_colors.dart';
-import '../../data/mock/lighting_taxonomy.dart';
+import '../../data/mock/catalog_taxonomy.dart';
 import '../../data/mock/mock_catalog.dart';
 import '../../data/models/models.dart';
 import '../../data/repositories/app_state.dart';

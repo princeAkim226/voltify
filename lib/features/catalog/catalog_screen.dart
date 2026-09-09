@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/theme/app_colors.dart';
-import '../../data/mock/lighting_taxonomy.dart';
+import '../../data/mock/catalog_taxonomy.dart';
 import '../../data/repositories/app_state.dart';
 import '../../shared/widgets/common_widgets.dart';
 import '../product_detail/product_detail_screen.dart';
@@ -16,7 +16,7 @@ class CatalogScreen extends StatelessWidget {
     final products = catalog.products;
     final selectedCat = catalog.selectedCategoryId == null
         ? null
-        : LightingTaxonomy.byId(catalog.selectedCategoryId!);
+        : CatalogTaxonomy.byId(catalog.selectedCategoryId!);
 
     return Column(
       children: [
@@ -25,7 +25,7 @@ class CatalogScreen extends StatelessWidget {
           child: TextField(
             onChanged: catalog.setQuery,
             decoration: InputDecoration(
-              hintText: 'Rechercher un luminaire, une marque…',
+              hintText: 'Rechercher un matériau, un produit, une marque…',
               prefixIcon: const Icon(Icons.search_rounded, color: AppColors.textTertiary),
               suffixIcon: catalog.query.isEmpty
                   ? null
@@ -37,13 +37,52 @@ class CatalogScreen extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 12),
+        // Le catalogue couvre ~400 familles pour une poignée de références en
+        // stock : on oriente vers le bon rayon même sans produit à montrer.
+        if (catalog.familySuggestions.isNotEmpty) ...[
+          SizedBox(
+            height: 40,
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              children: catalog.familySuggestions
+                  .map(
+                    (hit) => Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      child: ActionChip(
+                        avatar: Icon(hit.category.icon,
+                            size: 15, color: AppColors.primary),
+                        label: Text(hit.family),
+                        labelStyle: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.primaryDark,
+                        ),
+                        backgroundColor: AppColors.primarySoft,
+                        side: const BorderSide(color: AppColors.primaryLight),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        onPressed: () {
+                          catalog.setQuery('');
+                          catalog.setCategory(hit.category.id);
+                          catalog.setSubcategory(hit.sub.id);
+                        },
+                      ),
+                    ),
+                  )
+                  .toList(),
+            ),
+          ),
+          const SizedBox(height: 10),
+        ],
         if (selectedCat == null) ...[
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Align(
               alignment: Alignment.centerLeft,
               child: Text(
-                'Catégories Éclairage',
+                'Univers du catalogue',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
               ),
             ),
@@ -58,13 +97,13 @@ class CatalogScreen extends StatelessWidget {
                 crossAxisSpacing: 12,
                 childAspectRatio: 1.15,
               ),
-              itemCount: LightingTaxonomy.categories.length,
+              itemCount: CatalogTaxonomy.categories.length,
               itemBuilder: (context, index) {
-                final cat = LightingTaxonomy.categories[index];
+                final cat = CatalogTaxonomy.categories[index];
                 return _CategoryTile(
                   icon: cat.icon,
                   label: cat.label,
-                  subtitle: '${cat.children.length} sous-catégories',
+                  subtitle: '${cat.children.length} rayons · ${cat.familyCount} familles',
                   onTap: () => catalog.setCategory(cat.id),
                 );
               },
@@ -89,7 +128,7 @@ class CatalogScreen extends StatelessWidget {
                   child: Text(
                     catalog.selectedSubcategoryId == null
                         ? selectedCat.label
-                        : LightingTaxonomy.labelFor(
+                        : CatalogTaxonomy.labelFor(
                             categoryId: selectedCat.id,
                             subcategoryId: catalog.selectedSubcategoryId,
                           ),

@@ -58,6 +58,27 @@ class SupabaseService {
     await ensureSession();
   }
 
+  /// Dépose une demande de devis côté commerce.
+  ///
+  /// Table `quote_requests` (voir docs/supabase_materiel_migration.sql). Lève
+  /// en cas d'échec : l'appelant garde la demande en local et la considère
+  /// comme non transmise.
+  static Future<void> submitQuote(QuoteRequest request) async {
+    await client.from('quote_requests').insert({
+      'product_id': request.productId,
+      'product_name': request.productName,
+      'category_id': request.categoryId,
+      'subcategory_id': request.subcategoryId,
+      'customer_name': request.customerName,
+      'phone': request.phone,
+      'email': request.email,
+      'city': request.city,
+      'details': request.details,
+      'user_id': userId,
+      'created_at': request.createdAt.toIso8601String(),
+    });
+  }
+
   static Product _mapProduct(Map<String, dynamic> row) {
     final specsRaw = row['specs'];
     final specs = specsRaw is List ? specsRaw.map((e) => e.toString()).toList() : <String>[];

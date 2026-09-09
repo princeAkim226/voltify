@@ -1,6 +1,6 @@
 # Voltify
 
-Application mobile Flutter e-commerce pour la vente de matériel électronique au **Burkina Faso** (FCFA).
+Application mobile Flutter e-commerce pour la vente de **matériel de décoration, menuiserie et enseignes** au **Burkina Faso** (FCFA).
 
 ## Liens
 
@@ -11,13 +11,33 @@ Application mobile Flutter e-commerce pour la vente de matériel électronique a
 
 ## Fonctionnalités
 
-- Catalogue multi-catégories (smartphones, PC, TV, audio, accessoires, LED, électroménager)
+- Catalogue sur 8 univers, 37 rayons et ~400 familles de produits
+  (décoration intérieure et extérieure, menuiserie, enseignes, fabrication,
+  matériel électrique, vitrerie, consommables)
+- Recherche par famille : « charnière invisible », « pergola bioclimatique »
+  orientent vers le bon rayon même sans produit en stock
+- Deux modes de vente : **panier** pour le prix ferme, **devis** pour le
+  sur-mesure (menuiserie, enseignes, pergolas, vitrerie posée)
 - Fiche produit + produits similaires
 - Panier et checkout invité (sans compte obligatoire)
 - Livraison (Ouaga / Bobo) ou retrait magasin
 - Paiement mobile simulé : Orange Money, Moov Money, Telecel Money, Wave
 - Points fidélité Lumineux / Décoration
-- Données mock locales (schéma Supabase préparé dans `docs/supabase_schema.sql`)
+- Données mock locales (schéma Supabase dans `docs/supabase_schema.sql`)
+
+## Catalogue
+
+La nomenclature vit dans [`lib/data/mock/catalog_taxonomy.dart`](lib/data/mock/catalog_taxonomy.dart) :
+un univers porte des rayons, un rayon porte des familles et un mode de vente
+(`SaleMode.panier` ou `SaleMode.devis`) dont chaque produit hérite — surchargeable
+article par article via `saleModeOverride`.
+
+Côté base, la migration `docs/supabase_materiel_migration.sql` crée les univers,
+la table `subcategories`, la table `quote_requests`, et reclasse les produits
+issus de l'ancienne taxonomie Éclairage.
+
+`test/catalog_taxonomy_test.dart` interdit qu'un produit pointe vers un rayon
+inexistant ou qu'un article sans prix parte au panier.
 
 ## Lancer en local
 

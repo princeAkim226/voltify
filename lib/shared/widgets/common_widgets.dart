@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/formatters.dart';
-import '../../data/mock/lighting_taxonomy.dart';
+import '../../data/mock/catalog_taxonomy.dart';
 import '../../data/models/models.dart';
 
 class ProductImagePlaceholder extends StatelessWidget {
@@ -17,30 +17,12 @@ class ProductImagePlaceholder extends StatelessWidget {
   final double borderRadius;
 
   static IconData iconFor(String categoryId) {
-    return LightingTaxonomy.byId(categoryId)?.icon ?? Icons.lightbulb_rounded;
+    return CatalogTaxonomy.byId(categoryId)?.icon ?? Icons.category_rounded;
   }
 
   static List<Color> gradientFor(String categoryId) {
-    switch (categoryId) {
-      case 'indoor':
-        return const [Color(0xFF534AB7), Color(0xFF9B94E8)];
-      case 'outdoor':
-        return const [Color(0xFFBA7517), Color(0xFFEF9F27)];
-      case 'landscape':
-        return const [Color(0xFF0F6E56), Color(0xFF1D9E75)];
-      case 'architectural':
-        return const [Color(0xFF1A1730), Color(0xFF534AB7)];
-      case 'industrial':
-        return const [Color(0xFF3C3489), Color(0xFF7F77DD)];
-      case 'signage':
-        return const [Color(0xFFE30613), Color(0xFFEF9F27)];
-      case 'underwater':
-        return const [Color(0xFF0F6E56), Color(0xFF1DC8FF)];
-      case 'accessories':
-        return const [Color(0xFF5C5875), Color(0xFFAFA9EC)];
-      default:
-        return const [Color(0xFF534AB7), Color(0xFF7F77DD)];
-    }
+    return CatalogTaxonomy.byId(categoryId)?.gradient ??
+        const [Color(0xFF534AB7), Color(0xFF7F77DD)];
   }
 
   @override
@@ -181,7 +163,9 @@ class ProductCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      Formatters.fcfa(product.price),
+                      product.isQuoteOnly
+                          ? 'Sur devis'
+                          : Formatters.fcfa(product.price),
                       style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.w800, fontSize: 14),
                     ),
                     if (product.hasDiscount)

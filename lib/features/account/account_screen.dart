@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/formatters.dart';
-import '../../data/mock/lighting_taxonomy.dart';
+import '../../data/mock/catalog_taxonomy.dart';
 import '../../data/models/models.dart';
 import '../../data/repositories/app_state.dart';
 
@@ -17,6 +17,7 @@ class AccountScreen extends StatelessWidget {
     final auth = context.watch<AuthProvider>();
     final profile = auth.profile;
     final tier = loyalty.tier;
+    final quotes = context.watch<QuoteProvider>().requests;
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
@@ -86,7 +87,7 @@ class AccountScreen extends StatelessWidget {
             child: const Text('Se déconnecter'),
           ),
         const SizedBox(height: 20),
-        Text('Fidélité Éclairage', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
+        Text('Vos points fidélité', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
         const SizedBox(height: 10),
         Container(
           padding: const EdgeInsets.all(16),
@@ -117,14 +118,19 @@ class AccountScreen extends StatelessWidget {
             color: AppColors.primarySoft,
             borderRadius: BorderRadius.circular(16),
           ),
-          child: const Row(
+          child: Row(
             children: [
-              Icon(Icons.auto_awesome_rounded, color: AppColors.primary),
-              SizedBox(width: 10),
+              const Icon(Icons.request_quote_rounded, color: AppColors.primary),
+              const SizedBox(width: 10),
               Expanded(
                 child: Text(
-                  'Décoratif — Bientôt. Une liste dédiée arrivera prochainement.',
-                  style: TextStyle(fontWeight: FontWeight.w700, color: AppColors.primaryDark),
+                  quotes.isEmpty
+                      ? 'Aucune demande de devis. Le sur-mesure (menuiserie, '
+                          'enseignes, pergolas) se chiffre après relevé.'
+                      : '${quotes.length} demande${quotes.length > 1 ? 's' : ''} '
+                          'de devis en cours — un conseiller vous rappelle '
+                          'sous 48 h ouvrées.',
+                  style: const TextStyle(fontWeight: FontWeight.w700, color: AppColors.primaryDark),
                 ),
               ),
             ],

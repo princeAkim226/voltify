@@ -16,42 +16,65 @@ function money(n) {
   return new Intl.NumberFormat('fr-FR').format(Number(n || 0)) + ' FCFA';
 }
 
+// Doit rester aligné sur lib/data/mock/catalog_taxonomy.dart : un produit rangé
+// dans un rayon absent de l'app n'apparaît nulle part en boutique.
+// `devis: true` = rayon sur mesure, sans prix ferme.
 const TAXONOMY = [
-  { id: 'architectural', label: 'Architectural / Façade', children: [
-    { id: 'facade', label: 'Éclairage façade' }, { id: 'wall_washer', label: 'Wall washer' },
-    { id: 'aluminum_profile', label: 'Profilés aluminium' }, { id: 'neon_flex', label: 'Neon Flex' },
+  { id: 'deco_interieure', label: 'Décoration intérieure', children: [
+    { id: 'revetements_muraux', label: 'Revêtements muraux' },
+    { id: 'plafonds', label: 'Plafonds', devis: true },
+    { id: 'eclairage_deco', label: 'Éclairage décoratif' },
+    { id: 'sols', label: 'Sols' },
+    { id: 'mur_tv', label: 'Décoration TV / mur TV', devis: true },
+    { id: 'miroiterie', label: 'Miroiterie et verre' },
+    { id: 'ameublement', label: 'Décoration et ameublement' },
   ]},
-  { id: 'indoor', label: 'Indoor / Résidentiel', children: [
-    { id: 'ceiling', label: 'Plafonniers' }, { id: 'downlight', label: 'Down lights' },
-    { id: 'panel', label: 'Panneaux LED' }, { id: 'spot', label: 'Spots' },
-    { id: 'track', label: 'Rails / Track' }, { id: 'chandelier', label: 'Lustres' },
-    { id: 'pendant', label: 'Suspensions' }, { id: 'cabinet', label: 'Éclairage meubles' },
-    { id: 'bulbs', label: 'Ampoules LED' }, { id: 'bathroom_mirror', label: 'Miroirs SDB' },
+  { id: 'deco_exterieure', label: 'Décoration extérieure', children: [
+    { id: 'facades', label: 'Façades', devis: true },
+    { id: 'terrasses', label: 'Terrasses', devis: true },
+    { id: 'jardins', label: 'Jardins' },
+    { id: 'eclairage_exterieur', label: 'Éclairage extérieur' },
+    { id: 'clotures', label: 'Clôtures et séparation', devis: true },
+    { id: 'pergolas', label: 'Pergolas et espaces extérieurs', devis: true },
   ]},
-  { id: 'industrial', label: 'Industriel / Entrepôt', children: [
-    { id: 'high_bay', label: 'High bay' }, { id: 'flood_industrial', label: 'Projecteurs' },
-    { id: 'tubes', label: 'Tubes LED' }, { id: 'exit', label: 'Secours' }, { id: 'fixtures', label: 'Luminaires' },
+  { id: 'menuiserie', label: 'Menuiserie moderne', children: [
+    { id: 'bois_panneaux', label: 'Bois — Panneaux' },
+    { id: 'bois_finitions', label: 'Bois — Finitions' },
+    { id: 'aluminium', label: 'Menuiserie aluminium', devis: true },
+    { id: 'alu_accessoires', label: 'Aluminium — Accessoires' },
+    { id: 'metallique', label: 'Menuiserie métallique' },
+    { id: 'meubles_mesure', label: 'Meubles sur mesure', devis: true },
+    { id: 'portes', label: 'Portes modernes', devis: true },
+    { id: 'quincaillerie', label: 'Quincaillerie moderne' },
   ]},
-  { id: 'outdoor', label: 'Extérieur', children: [
-    { id: 'flood', label: 'Flood lights' }, { id: 'street', label: 'Éclairage rue' },
-    { id: 'wall_outdoor', label: 'Appliques' }, { id: 'bulkhead', label: 'Bulkhead' },
+  { id: 'enseignes', label: 'Enseignes & signalétique', children: [
+    { id: 'enseignes_lumineuses', label: 'Enseignes lumineuses', devis: true },
+    { id: 'enseignes_non_lumineuses', label: 'Enseignes non lumineuses', devis: true },
+    { id: 'materiaux_enseignes', label: 'Matériaux pour enseignes' },
+    { id: 'caissons', label: 'Caissons', devis: true },
+    { id: 'signaletique', label: 'Signalétique', devis: true },
   ]},
-  { id: 'landscape', label: 'Paysage / Jardin', children: [
-    { id: 'bollard', label: 'Bollards' }, { id: 'spike', label: 'Piques' },
-    { id: 'inground', label: 'Encastrés sol' }, { id: 'step', label: 'Step lights' },
-    { id: 'string', label: 'Guirlandes' }, { id: 'palm', label: 'Palmier' },
+  { id: 'fabrication', label: 'Fabrication & pose', children: [
+    { id: 'outillage_bois', label: 'Travail du bois' },
+    { id: 'outillage_metal', label: 'Travail du métal' },
+    { id: 'machines_enseignes', label: "Fabrication d'enseignes", devis: true },
+    { id: 'outillage_pose', label: 'Pose' },
   ]},
-  { id: 'signage', label: 'Signalétique / Publicité', children: [
-    { id: 'neon_sign', label: 'Néons' }, { id: 'programmable', label: 'Programmables' },
-    { id: 'strips_rgb', label: 'Bandes RGB' }, { id: 'rope', label: 'Rope lights' }, { id: 'motif', label: 'Motifs' },
+  { id: 'electrique', label: 'Matériel électrique', children: [
+    { id: 'led', label: 'LED' },
+    { id: 'alimentation', label: 'Alimentation' },
+    { id: 'luminaires_techniques', label: 'Luminaires techniques' },
+    { id: 'installation', label: 'Installation' },
   ]},
-  { id: 'underwater', label: 'Sous-marin / Piscine', children: [
-    { id: 'pool', label: 'Piscine' }, { id: 'underwater_spot', label: 'Spots submersibles' },
+  { id: 'vitrerie', label: 'Vitrerie & verre', children: [
+    { id: 'types_verre', label: 'Types de verre' },
+    { id: 'applications_verre', label: 'Applications', devis: true },
   ]},
-  { id: 'accessories', label: 'Accessoires LED', children: [
-    { id: 'drivers', label: 'Drivers' }, { id: 'dimmers', label: 'Dimmers' },
-    { id: 'sensors', label: 'Capteurs' }, { id: 'cables', label: 'Câbles' },
-    { id: 'holders', label: 'Douilles' }, { id: 'profiles_acc', label: 'Profilés acc.' },
+  { id: 'consommables', label: 'Finitions & consommables', children: [
+    { id: 'peintures_colles', label: 'Peintures, vernis & colles' },
+    { id: 'abrasifs_coupe', label: 'Abrasifs & outils de coupe' },
+    { id: 'visserie', label: 'Visserie & fixations' },
+    { id: 'adhesifs', label: 'Adhésifs & films' },
   ]},
 ];
 
@@ -66,7 +89,9 @@ function fillCategorySelects(categoryId, subcategoryId) {
   const selected = categoryId || TAXONOMY[0].id;
   catSel.value = selected;
   const children = TAXONOMY.find((c) => c.id === selected)?.children || [];
-  subSel.innerHTML = children.map((s) => `<option value="${s.id}">${s.label}</option>`).join('');
+  subSel.innerHTML = children
+    .map((s) => `<option value="${s.id}">${s.label}${s.devis ? ' — sur devis' : ''}</option>`)
+    .join('');
   if (subcategoryId) subSel.value = subcategoryId;
 }
 
@@ -255,7 +280,7 @@ function openProductDialog(product) {
   document.getElementById('f-id').value = product?.id || '';
   document.getElementById('f-name').value = product?.name || '';
   document.getElementById('f-brand').value = product?.brand || '';
-  fillCategorySelects(product?.category_id || 'indoor', product?.subcategory_id);
+  fillCategorySelects(product?.category_id || 'deco_interieure', product?.subcategory_id);
   document.getElementById('f-badge').value = product?.badge || '';
   document.getElementById('f-price').value = product?.price ?? '';
   document.getElementById('f-old-price').value = product?.old_price ?? '';

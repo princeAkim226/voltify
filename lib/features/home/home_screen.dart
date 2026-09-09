@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/theme/app_colors.dart';
-import '../../data/mock/lighting_taxonomy.dart';
+import '../../data/mock/catalog_taxonomy.dart';
 import '../../data/mock/mock_catalog.dart';
 import '../../data/models/models.dart';
 import '../../data/repositories/app_state.dart';
@@ -142,7 +142,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         const SliverToBoxAdapter(child: SizedBox(height: 22)),
         SliverToBoxAdapter(
-          child: SectionHeader(title: 'Fidélité Éclairage'),
+          child: SectionHeader(title: 'Vos points fidélité'),
         ),
         // ignore: prefer_const_constructors
         SliverToBoxAdapter(
@@ -167,9 +167,18 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: _SoonCard(
-                    title: 'Décoratif',
-                    subtitle: 'Bientôt disponible',
+                  child: _PointsCard(
+                    title: 'Décoration',
+                    value: loyalty.deco,
+                    subtitle: 'Menuiserie, déco, verre',
+                    progress: loyalty.progress(LoyaltyTrack.deco),
+                    soft: AppColors.greenSoft,
+                    border: AppColors.greenLight,
+                    iconBg: AppColors.greenLight,
+                    icon: Icons.chair_rounded,
+                    titleColor: const Color(0xFF04342C),
+                    valueColor: const Color(0xFF04342C),
+                    fill: AppColors.green,
                   ),
                 ),
               ],
@@ -179,7 +188,7 @@ class _HomeScreenState extends State<HomeScreen> {
         const SliverToBoxAdapter(child: SizedBox(height: 22)),
         SliverToBoxAdapter(
           child: SectionHeader(
-            title: 'Catégories Éclairage',
+            title: 'Univers du catalogue',
             actionLabel: 'Tout voir',
             onAction: widget.onOpenCatalog,
           ),
@@ -190,10 +199,10 @@ class _HomeScreenState extends State<HomeScreen> {
             child: ListView.separated(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               scrollDirection: Axis.horizontal,
-              itemCount: LightingTaxonomy.categories.length,
+              itemCount: CatalogTaxonomy.categories.length,
               separatorBuilder: (_, __) => const SizedBox(width: 10),
               itemBuilder: (context, index) {
-                final cat = LightingTaxonomy.categories[index];
+                final cat = CatalogTaxonomy.categories[index];
                 return _CategoryChip(
                   icon: cat.icon,
                   label: cat.label,
@@ -381,49 +390,6 @@ class _PointsCard extends StatelessWidget {
               color: fill,
             ),
           ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SoonCard extends StatelessWidget {
-  const _SoonCard({required this.title, required this.subtitle});
-
-  final String title;
-  final String subtitle;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppColors.primarySoft,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFAFA9EC)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 34,
-            height: 34,
-            decoration: BoxDecoration(color: const Color(0xFFAFA9EC), borderRadius: BorderRadius.circular(10)),
-            child: const Icon(Icons.auto_awesome_rounded, color: Color(0xFF26215C), size: 18),
-          ),
-          const SizedBox(height: 10),
-          Text(title, style: const TextStyle(color: AppColors.primaryDark, fontWeight: FontWeight.w700, fontSize: 13)),
-          const SizedBox(height: 6),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.7),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(subtitle, style: const TextStyle(color: AppColors.primaryDark, fontWeight: FontWeight.w800, fontSize: 12)),
-          ),
-          const SizedBox(height: 10),
-          Text('Liste à venir', style: TextStyle(color: AppColors.primaryDark.withValues(alpha: 0.7), fontSize: 11)),
         ],
       ),
     );

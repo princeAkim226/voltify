@@ -3,10 +3,11 @@ import 'package:provider/provider.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/utils/formatters.dart';
-import '../../data/mock/lighting_taxonomy.dart';
+import '../../data/mock/catalog_taxonomy.dart';
 import '../../data/models/models.dart';
 import '../../data/repositories/app_state.dart';
 import '../../shared/widgets/common_widgets.dart';
+import '../quote/quote_request_screen.dart';
 
 class ProductDetailScreen extends StatelessWidget {
   const ProductDetailScreen({super.key, required this.product});
@@ -86,7 +87,9 @@ class ProductDetailScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       Text(
-                        Formatters.fcfa(product.price),
+                        product.isQuoteOnly
+                            ? 'Sur devis'
+                            : Formatters.fcfa(product.price),
                         style: const TextStyle(
                           color: AppColors.primary,
                           fontWeight: FontWeight.w900,
@@ -110,18 +113,25 @@ class ProductDetailScreen extends StatelessWidget {
                     spacing: 8,
                     runSpacing: 8,
                     children: [
-                      _InfoPill(
-                        icon: Icons.loyalty_rounded,
-                        label: '+${product.pointsReward} pts ${product.loyaltyTrack == LoyaltyTrack.lumineux ? 'Lumineux' : 'Déco'}',
-                      ),
-                      _InfoPill(
-                        icon: product.inStock ? Icons.check_circle_rounded : Icons.cancel_rounded,
-                        label: product.inStock ? 'En stock' : 'Rupture',
-                        color: product.inStock ? AppColors.greenLight : AppColors.danger,
-                      ),
+                      if (product.isQuoteOnly)
+                        const _InfoPill(
+                          icon: Icons.straighten_rounded,
+                          label: 'Sur mesure — chiffré après relevé',
+                        )
+                      else ...[
+                        _InfoPill(
+                          icon: Icons.loyalty_rounded,
+                          label: '+${product.pointsReward} pts ${product.loyaltyTrack == LoyaltyTrack.lumineux ? 'Lumineux' : 'Déco'}',
+                        ),
+                        _InfoPill(
+                          icon: product.inStock ? Icons.check_circle_rounded : Icons.cancel_rounded,
+                          label: product.inStock ? 'En stock' : 'Rupture',
+                          color: product.inStock ? AppColors.greenLight : AppColors.danger,
+                        ),
+                      ],
                       _InfoPill(
                         icon: Icons.category_outlined,
-                        label: LightingTaxonomy.labelFor(
+                        label: CatalogTaxonomy.labelFor(
                           categoryId: product.categoryId,
                           subcategoryId: product.subcategoryId,
                         ),
@@ -189,7 +199,21 @@ class ProductDetailScreen extends StatelessWidget {
       bottomNavigationBar: SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
-          child: Row(
+          child: product.isQuoteOnly
+              ? SizedBox(
+                  width: double.infinity,
+                  height: 52,
+                  child: ElevatedButton.icon(
+                    onPressed: () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => QuoteRequestScreen(product: product),
+                      ),
+                    ),
+                    icon: const Icon(Icons.request_quote_rounded),
+                    label: const Text('Demander un devis'),
+                  ),
+                )
+              : Row(
             children: [
               Expanded(
                 child: OutlinedButton.icon(
