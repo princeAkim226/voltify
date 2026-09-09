@@ -53,7 +53,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       body: Form(
         key: _formKey,
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
           children: [
             Text('Coordonnées (invité OK)', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)),
             const SizedBox(height: 6),
@@ -151,8 +151,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(p.name, style: const TextStyle(fontWeight: FontWeight.w800)),
-                                Text(p.address, style: const TextStyle(color: AppColors.textSecondary, fontSize: 12)),
-                                Text('${p.city} · ${p.hours}', style: const TextStyle(color: AppColors.textTertiary, fontSize: 12)),
+                                Text(p.address, style: const TextStyle(color: AppColors.textSecondary, fontSize: 13, height: 1.35)),
+                                Text('${p.city} · ${p.hours}', style: const TextStyle(color: AppColors.textSecondary, fontSize: 12, height: 1.35)),
                               ],
                             ),
                           ),
@@ -177,26 +177,31 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 );
               },
             ),
-            const SizedBox(height: 20),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {
-                  if (!_formKey.currentState!.validate()) return;
-                  draft.update(
-                    name: _name.text.trim(),
-                    phone: _phone.text.trim(),
-                    email: _email.text.trim(),
-                    address: _address.text.trim(),
-                  );
-                  Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const PaymentScreen()),
-                  );
-                },
-                child: const Text('Choisir le paiement'),
-              ),
-            ),
           ],
+        ),
+      ),
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+          child: SizedBox(
+            width: double.infinity,
+            height: 52,
+            child: ElevatedButton(
+              onPressed: () {
+                if (!_formKey.currentState!.validate()) return;
+                draft.update(
+                  name: _name.text.trim(),
+                  phone: _phone.text.trim(),
+                  email: _email.text.trim(),
+                  address: _address.text.trim(),
+                );
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const PaymentScreen()),
+                );
+              },
+              child: const Text('Choisir le paiement'),
+            ),
+          ),
         ),
       ),
     );

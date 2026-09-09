@@ -86,7 +86,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('Paiement mobile')),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
         children: [
           Container(
             padding: const EdgeInsets.all(16),
@@ -167,8 +167,12 @@ class _PaymentScreenState extends State<PaymentScreen> {
               hintText: '70 XX XX XX',
             ),
           ),
-          const SizedBox(height: 24),
-          SizedBox(
+        ],
+      ),
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+          child: SizedBox(
             width: double.infinity,
             height: 52,
             child: ElevatedButton(
@@ -182,7 +186,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                   : Text('Payer ${Formatters.fcfa(total)}'),
             ),
           ),
-        ],
+        ),
       ),
     );
   }
