@@ -5,11 +5,16 @@ Connexion par **identifiant / mot de passe** (plus de clé à coller).
 ## Accès
 
 - URL : https://voltify-admin-bf.netlify.app
-- Identifiant : `admin`
-- Mot de passe : `Voltify@2026`
 
-Changez ces valeurs dans Netlify → Site settings → Environment variables :
-`ADMIN_USERNAME`, `ADMIN_PASSWORD`.
+Les identifiants ne sont **pas** dans ce dépôt : il est public. Ils vivent dans
+Netlify → Site settings → Environment variables, sous `ADMIN_USERNAME` et
+`ADMIN_PASSWORD` (et `ADMIN_SESSION_SECRET` pour la signature des sessions).
+
+`netlify/functions/admin-api.js` contient des valeurs de repli codées en dur,
+visibles de tous. Elles ne servent qu'au développement local : les trois
+variables doivent rester définies en production, sinon la console s'ouvre avec
+un mot de passe que tout le monde peut lire sur GitHub — et l'onglet Devis
+expose les noms et numéros de téléphone des clients.
 
 ## Fonctionnalités
 
