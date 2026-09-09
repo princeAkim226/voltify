@@ -48,12 +48,54 @@ flutter run
 
 ## Build APK
 
+En local :
+
 ```bash
 flutter build apk --release
 ```
 
-APK : `build/app/outputs/flutter-apk/app-release.apk`  
-Page téléchargement : dossier `web_download/`
+APK : `build/app/outputs/flutter-apk/app-release.apk`
+
+### Build sur GitHub Actions
+
+`.github/workflows/build-apk.yml`, déclenchement **manuel** (onglet Actions →
+*Build APK* → *Run workflow*). Un push ne construit rien.
+
+Le workflow analyse, teste, construit l'APK signé avec la clé de release et le
+dépose en artefact. Il échoue volontairement si le keystore manque : un APK
+signé en debug ne peut pas se mettre à jour par-dessus la version publiée.
+
+Deux secrets sont requis dans **Settings → Secrets and variables → Actions** :
+
+| Secret | Contenu |
+|---|---|
+| `ANDROID_KEYSTORE_BASE64` | `android/keystore/voltify-release.jks` encodé en base64 |
+| `ANDROID_KEY_PROPERTIES` | le contenu de `android/key.properties`, tel quel |
+
+Pour produire le base64 du keystore (PowerShell) :
+
+```powershell
+[Convert]::ToBase64String([IO.File]::ReadAllBytes("android\keystore\voltify-release.jks")) | Set-Clipboard
+```
+
+Les deux fichiers sont gitignorés et ne doivent jamais être commités.
+
+## Publication
+
+Les deux sites Netlify sont en **déploiement manuel** (aucun lien GitHub) :
+
+```bash
+netlify deploy --prod --dir admin --functions netlify/functions \
+  --site 1d346527-de6e-40d3-be4d-b8c20db87523      # voltify-admin-bf
+
+netlify deploy --prod --dir web_download \
+  --site 6bd79847-4cf9-461a-a72d-73923d57a319      # voltify-download-bf
+```
+
+Avant de publier le site de téléchargement : copier l'APK dans
+`web_download/voltify.apk` **et** mettre à jour la version et la taille
+affichées dans `web_download/index.html`. La page ne doit jamais annoncer une
+version qui n'est pas celle du fichier servi.
 
 ## Stack
 
