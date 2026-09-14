@@ -54,10 +54,14 @@ class AppRelease {
 class UpdateService {
   UpdateService._();
 
-  /// Publié par le même déploiement que l'APK : les deux ne peuvent pas
-  /// se désynchroniser.
-  static const manifestUrl =
-      'https://voltify-download-bf.netlify.app/version.json';
+  /// Gravée dans chaque APK installé : la déplacer coupe définitivement les
+  /// mises à jour des versions déjà chez les clients, sans recours. Elle vit
+  /// donc sur notre domaine, que nous pouvons rediriger, et jamais sur celui
+  /// d'un hébergeur ou sur une IP.
+  ///
+  /// Le manifeste désigne l'APK par une URL absolue : celui-ci peut déménager
+  /// librement, les installations suivront.
+  static const manifestUrl = 'https://dl.raaga-bf.com/version.json';
 
   /// Version installée, telle que le système la connaît.
   static Future<int> currentBuild() async {

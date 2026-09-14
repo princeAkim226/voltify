@@ -47,5 +47,10 @@ app.*.map.json
 # Local Netlify folder
 .netlify
 
-# Genere au moment de la publication par scripts/make_version_json.mjs
-web_download/version.json
+# version.json est genere par scripts/make_version_json.mjs, mais il est
+# versionne : le site de telechargement se deploie depuis git, et ce que git
+# ignore n existe pas sur le serveur. Le regenerer avant de committer.
+
+# APK publie sur GitHub Releases : 23 Mo par version resteraient sinon dans
+# l historique git pour toujours.
+web_download/*.apk

@@ -48,10 +48,14 @@ const notes = [
 // retomberait sur ses données de démonstration : la mise à jour est imposée.
 const minBuild = 2;
 
+// L'APK vit sur GitHub Releases : bande passante gratuite, et un binaire de
+// 23 Mo par version n'a rien à faire dans l'historique git. L'URL est taguée
+// et non « latest » : un manifeste doit désigner l'APK dont il annonce la
+// taille, pas celui qui sera publié demain.
 const manifest = {
   version,
   build,
-  url: 'https://voltify-download-bf.netlify.app/voltify.apk',
+  url: `https://github.com/princeAkim226/voltify/releases/download/v${version}/voltify.apk`,
   size,
   minBuild,
   notes,
