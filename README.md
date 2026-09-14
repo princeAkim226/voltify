@@ -4,7 +4,7 @@ Application mobile Flutter e-commerce pour la vente de **matériel de décoratio
 
 ## Liens
 
-- **Télécharger l’APK** : https://voltify-download-bf.netlify.app
+- **Télécharger l’APK** : https://dl.raaga-bf.com
 - **Admin catalogue** : https://voltify.raaga-bf.com
 - **API et Studio Supabase** : https://api.raaga-bf.com
 - **Repo** : https://github.com/princeAkim226/voltify
@@ -88,23 +88,26 @@ La **console admin** tourne sur le VPS, pilotée par Coolify
 puis *Redeploy* depuis Coolify. L'image se construit depuis
 `admin-server/Dockerfile`.
 
-Le **site de téléchargement** reste sur Netlify, en déploiement manuel :
-
-```bash
-netlify deploy --prod --dir web_download \
-  --site 6bd79847-4cf9-461a-a72d-73923d57a319      # voltify-download-bf
-```
+Le **site de téléchargement** (`https://dl.raaga-bf.com`) se déploie lui aussi
+depuis Coolify, à partir de `web_download/Dockerfile`. Il ne sert que la page et
+`version.json` : les APK sont publiés sur **GitHub Releases**, dont la bande
+passante est gratuite et qui évite d'alourdir le dépôt de 23 Mo par version.
 
 ### Publier une nouvelle version de l'app
 
 Dans cet ordre :
 
 ```bash
-cp <apk-telecharge> web_download/voltify.apk   # 1. l'APK construit par la CI
-node scripts/make_version_json.mjs             # 2. le manifeste, depuis l'APK réel
-                                               # 3. version + taille dans index.html
-netlify deploy --prod --dir web_download --site 6bd79847-4cf9-461a-a72d-73923d57a319
+cp <apk-telecharge> web_download/voltify.apk    # 1. l'APK construit par la CI
+node scripts/make_version_json.mjs              # 2. le manifeste, depuis l'APK réel
+gh release create vX.Y.Z web_download/voltify.apk \
+  --title "Voltify X.Y.Z" --notes "..."         # 3. publier le binaire
+git add web_download/version.json && git commit # 4. le manifeste part avec le site
+git push                                        # 5. puis redéployer dans Coolify
 ```
+
+L'étape 3 doit précéder la 5 : le manifeste désigne l'APK par une URL taguée,
+qui doit exister avant d'être annoncée.
 
 L'étape 2 lit `pubspec.yaml` et la taille réelle du fichier : elle refuse de
 produire un manifeste incohérent. Ne l'écrivez jamais à la main.

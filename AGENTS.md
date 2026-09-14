@@ -56,7 +56,8 @@ plus hébergé chez Supabase cloud.
 | Panel Coolify | `panel.raaga-bf.com` |
 | API Supabase + Studio | `api.raaga-bf.com` |
 | Console admin | `voltify.raaga-bf.com` |
-| Téléchargement APK | encore sur Netlify (`voltify-download-bf`) |
+| Page de téléchargement et `version.json` | `dl.raaga-bf.com` |
+| Les APK eux-mêmes | GitHub Releases |
 
 Le domaine `raaga-bf.com` a ses DNS chez **Netlify** ; le site racine est un
 projet Next.js distinct, à ne pas toucher.
@@ -125,11 +126,21 @@ pas se mettre à jour par-dessus la version publiée.
 Publier une version (ordre impératif) :
 
 ```bash
-cp <apk> web_download/voltify.apk      # 1. l'APK construit par la CI
-node scripts/make_version_json.mjs     # 2. le manifeste, depuis l'APK réel
-                                       # 3. version et taille dans index.html
-netlify deploy --prod --dir web_download --site 6bd79847-4cf9-461a-a72d-73923d57a319
+cp <apk> web_download/voltify.apk               # 1. l'APK construit par la CI
+node scripts/make_version_json.mjs              # 2. le manifeste, depuis l'APK reel
+gh release create vX.Y.Z web_download/voltify.apk \
+  --title "Voltify X.Y.Z" --notes "..."         # 3. publier le binaire
+git add web_download/version.json && git commit # 4. le manifeste part avec le site
+git push                                        # 5. puis redeployer dans Coolify
 ```
 
-Ne jamais écrire `version.json` à la main : la page et le manifeste ne doivent
-jamais annoncer une version différente de l'APK servi à côté d'eux.
+L'étape 3 doit précéder la 5 : le manifeste désigne l'APK par une URL taguée,
+qui doit exister avant d'être annoncée.
+
+Ne jamais écrire `version.json` à la main. La taille qu'il annonce doit être
+celle du fichier réellement publié, sinon l'app télécharge 23 Mo pour rien ou
+se croit à jour à tort.
+
+L'APK n'est **pas** versionné (`web_download/*.apk` est ignoré) : il vit sur
+GitHub Releases. Il reste copié localement dans `web_download/` le temps de
+générer le manifeste, qui lit sa taille réelle.
