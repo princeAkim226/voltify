@@ -18,6 +18,41 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const apkPath = resolve(root, 'web_download/voltify.apk');
 const outPath = resolve(root, 'web_download/version.json');
 
+// Puces de la section « ## X.Y.Z » du journal des versions. Refuser de publier
+// sans elles vaut mieux que servir au client les nouveautés d'une autre
+// version : c'est la seule chose qu'il lit avant d'accepter 23 Mo.
+function lireNotes(version) {
+  const chemin = resolve(root, 'CHANGELOG.md');
+  let journal;
+  try {
+    journal = readFileSync(chemin, 'utf8');
+  } catch {
+    console.error(`CHANGELOG.md introuvable : ${chemin}`);
+    process.exit(1);
+  }
+
+  const lignes = journal.split('\n');
+  const debut = lignes.findIndex((ligne) => ligne.trim() === `## ${version}`);
+  if (debut === -1) {
+    console.error(`Aucune section "## ${version}" dans CHANGELOG.md.`);
+    console.error('Ajoutez-la avant de publier.');
+    process.exit(1);
+  }
+
+  const notes = [];
+  for (const ligne of lignes.slice(debut + 1)) {
+    const texte = ligne.trim();
+    if (texte.startsWith('## ')) break;
+    if (texte.startsWith('- ')) notes.push(texte.slice(2).trim());
+  }
+
+  if (notes.length === 0) {
+    console.error(`La section "## ${version}" de CHANGELOG.md est vide.`);
+    process.exit(1);
+  }
+  return notes;
+}
+
 const pubspec = readFileSync(resolve(root, 'pubspec.yaml'), 'utf8');
 const match = pubspec.match(/^version:\s*(\d+\.\d+\.\d+)\+(\d+)\s*$/m);
 if (!match) {
@@ -36,13 +71,9 @@ try {
   process.exit(1);
 }
 
-// Notes de version affichées dans l'app. À réécrire à chaque livraison :
-// c'est la seule chose que le client lit avant d'accepter 23 Mo.
-const notes = [
-  'La boutique tourne désormais sur notre propre serveur',
-  'Plus de coupure du service après quelques jours sans activité',
-  'Catalogue, devis et paiements inchangés',
-];
+// Les notes viennent de CHANGELOG.md, pas d'ici : codées dans ce script, elles
+// finissaient par annoncer au client les nouveautés de la version précédente.
+const notes = lireNotes(version);
 
 // En dessous de ce build, l'app ne sait plus lire le catalogue en base et
 // retomberait sur ses données de démonstration : la mise à jour est imposée.

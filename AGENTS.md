@@ -137,9 +137,18 @@ git push                                        # 5. puis redeployer dans Coolif
 L'étape 3 doit précéder la 5 : le manifeste désigne l'APK par une URL taguée,
 qui doit exister avant d'être annoncée.
 
+Les notes de version viennent de `CHANGELOG.md`, section `## X.Y.Z`. Sans elle,
+le script refuse de produire le manifeste.
+
 Ne jamais écrire `version.json` à la main. La taille qu'il annonce doit être
 celle du fichier réellement publié, sinon l'app télécharge 23 Mo pour rien ou
 se croit à jour à tort.
+
+**Ne pas régénérer `version.json` en local** hors d'une vraie publication : le
+script lit la taille de l'APK présent dans `web_download/`, qui est presque
+toujours une version antérieure. Le manifeste annoncerait alors une taille que
+GitHub ne sert pas. En cas de doute : `git checkout -- web_download/version.json`
+pour reprendre celui produit par la CI.
 
 L'APK n'est **pas** versionné (`web_download/*.apk` est ignoré) : il vit sur
 GitHub Releases. Il reste copié localement dans `web_download/` le temps de
