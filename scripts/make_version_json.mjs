@@ -39,13 +39,18 @@ try {
 // Notes de version affichées dans l'app. À réécrire à chaque livraison :
 // c'est la seule chose que le client lit avant d'accepter 23 Mo.
 const notes = [
-  'Nouveau catalogue : décoration, menuiserie, enseignes',
-  'Demande de devis pour le sur-mesure',
-  'Recherche par famille de produits',
+  'La boutique tourne désormais sur notre propre serveur',
+  'Plus de coupure du service après quelques jours sans activité',
+  'Catalogue, devis et paiements inchangés',
 ];
 
 // En dessous de ce build, l'app ne sait plus lire le catalogue en base et
 // retomberait sur ses données de démonstration : la mise à jour est imposée.
+//
+// Les builds 2 et antérieurs interrogent l'ancien projet Supabase hébergé.
+// Ils fonctionnent tant qu'il existe : le jour où il sera supprimé, passer
+// cette valeur à 3, sinon ces installations afficheront une boutique vide
+// sans jamais proposer la mise à jour qui les réparerait.
 const minBuild = 2;
 
 // L'APK vit sur GitHub Releases : bande passante gratuite, et un binaire de
