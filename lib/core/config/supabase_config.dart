@@ -2,7 +2,7 @@
 class SupabaseConfig {
   SupabaseConfig._();
 
-  static const url = 'https://rrrlkvcfxykyhscrswzi.supabase.co';
+  static const url = 'https://api-voltify.109.199.124.31.sslip.io';
   static const anonKey =
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJycmxrdmNmeHlreWhzY3Jzd3ppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc3NTUzNzYsImV4cCI6MjEwMzMzMTM3Nn0.EdUlkGyZmRua1gZy_n4uYvgabt3ulFcB7iCvmNX7gk0';
+      'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJzdXBhYmFzZSIsImlhdCI6MTc4OTM3OTc2MCwiZXhwIjo0OTQ1MDUzMzYwLCJyb2xlIjoiYW5vbiJ9.qFdsqIcMeQeGUYJaV5TjGvYZq84qg3L16p_uFS0qeZk';
 }
