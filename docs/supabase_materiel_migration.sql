@@ -180,3 +180,11 @@ create policy "quote_insert_public" on quote_requests
 drop policy if exists "quote_select_own" on quote_requests;
 create policy "quote_select_own" on quote_requests
   for select using (auth.uid() is not null and user_id = auth.uid());
+
+-- La taxonomie se lit depuis l'app avec la clé anon, qui voyage dans l'APK et
+-- se récupère par décompilation. Sans RLS, cette même clé effaçait les rayons.
+alter table subcategories enable row level security;
+
+drop policy if exists "public read subcategories" on subcategories;
+create policy "public read subcategories" on subcategories
+  for select using (true);
