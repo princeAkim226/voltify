@@ -78,11 +78,12 @@ const notes = lireNotes(version);
 // En dessous de ce build, l'app ne sait plus lire le catalogue en base et
 // retomberait sur ses données de démonstration : la mise à jour est imposée.
 //
-// Les builds 2 et antérieurs interrogent l'ancien projet Supabase hébergé.
-// Ils fonctionnent tant qu'il existe : le jour où il sera supprimé, passer
-// cette valeur à 3, sinon ces installations afficheront une boutique vide
-// sans jamais proposer la mise à jour qui les réparerait.
-const minBuild = 2;
+// Le build 3 est le premier à parler à notre propre backend, et le premier à
+// lire son manifeste sur dl.raaga-bf.com. Les builds antérieurs interrogeaient
+// voltify-download-bf.netlify.app, supprimé le 14/09/2026 : cette valeur ne
+// les bloque pas, elle acte qu'ils sont devenus inatteignables — aucun
+// manifeste ne leur parviendra plus, quoi qu'on écrive ici.
+const minBuild = 3;
 
 // L'APK vit sur GitHub Releases : bande passante gratuite, et un binaire de
 // 23 Mo par version n'a rien à faire dans l'historique git. L'URL est taguée
