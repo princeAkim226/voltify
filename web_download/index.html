@@ -160,7 +160,19 @@
       <a class="cta" href="https://github.com/princeAkim226/voltify/releases/latest/download/voltify.apk" download="voltify.apk">
         Télécharger l'APK
       </a>
-      <p class="meta">Android · 22,7 Mo · Version 1.3.0</p>
+      <!-- Renseigné depuis version.json : écrit en dur, ce libellé annonçait
+           encore la version précédente à chaque publication. -->
+      <p class="meta" id="meta">Android</p>
+      <script>
+        fetch('./version.json')
+          .then((r) => r.json())
+          .then((m) => {
+            const mo = (m.size / 1048576).toFixed(1).replace('.', ',');
+            document.getElementById('meta').textContent =
+              `Android · ${mo} Mo · Version ${m.version}`;
+          })
+          .catch(() => {});
+      </script>
       <div class="steps">
         <div class="step"><span class="num">1</span><span>Téléchargez le fichier APK sur votre téléphone Android.</span></div>
         <div class="step"><span class="num">2</span><span>Autorisez l'installation depuis des sources inconnues si demandé.</span></div>
