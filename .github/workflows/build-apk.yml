@@ -144,10 +144,30 @@ jobs:
             console.log('');
             console.log('Android · ' + (m.size/1048576).toFixed(1) + ' Mo · build ' + m.build);
           " > /tmp/notes.md
-          gh release create "$GITHUB_REF_NAME" \
-            build/app/outputs/flutter-apk/app-release.apk#voltify.apk \
+          # Le fichier doit s'appeler voltify.apk : c'est ce nom que le
+          # manifeste met dans son URL. `chemin#libelle` ne renomme pas le
+          # fichier, il ne change que l'affichage — d'où une 404 en 1.4.0.
+          cp build/app/outputs/flutter-apk/app-release.apk /tmp/voltify.apk
+          gh release create "$GITHUB_REF_NAME" /tmp/voltify.apk \
             --title "Voltify ${GITHUB_REF_NAME#v}" \
             --notes-file /tmp/notes.md
+
+      # Annoncer une version dont l'APK est introuvable ferait télécharger une
+      # page d'erreur aux apps installées. On vérifie avant de publier le
+      # manifeste, pas après : tant qu'il n'est pas en ligne, personne ne voit
+      # la nouvelle version.
+      - name: Vérifier que l'APK annoncé est réellement téléchargeable
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          URL=$(node -p "JSON.parse(require('fs').readFileSync('web_download/version.json','utf8')).url")
+          ANNONCEE=$(node -p "JSON.parse(require('fs').readFileSync('web_download/version.json','utf8')).size")
+          REELLE=$(curl -sIL "$URL" | grep -i '^content-length' | tail -1 | tr -d '\r' | awk '{print $2}')
+          if [ "$REELLE" != "$ANNONCEE" ]; then
+            echo "::error::Le manifeste annonce $ANNONCEE octets, l'URL en sert $REELLE."
+            echo "URL : $URL"
+            exit 1
+          fi
+          echo "Manifeste et APK publié concordent ($ANNONCEE octets)."
 
       # Le site de téléchargement se déploie depuis master : le manifeste doit
       # y être committé, sinon dl.raaga-bf.com sert encore l'ancienne version.
