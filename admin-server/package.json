@@ -1,0 +1,13 @@
+{
+  "name": "voltify-admin-server",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Console admin Voltify et son API, servies par un seul processus Node.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
