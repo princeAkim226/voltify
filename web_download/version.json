@@ -1,12 +1,12 @@
 {
-  "version": "1.3.0",
-  "build": 2,
-  "url": "https://github.com/princeAkim226/voltify/releases/download/v1.3.0/voltify.apk",
-  "size": 23817687,
+  "version": "1.4.0",
+  "build": 3,
+  "url": "https://github.com/princeAkim226/voltify/releases/download/v1.4.0/voltify.apk",
+  "size": 23817454,
   "minBuild": 2,
   "notes": [
-    "Nouveau catalogue : décoration, menuiserie, enseignes",
-    "Demande de devis pour le sur-mesure",
-    "Recherche par famille de produits"
+    "La boutique tourne désormais sur notre propre serveur",
+    "Plus de coupure du service après quelques jours sans activité",
+    "Catalogue, devis et paiements inchangés"
   ]
 }
