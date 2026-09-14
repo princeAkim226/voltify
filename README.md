@@ -5,7 +5,8 @@ Application mobile Flutter e-commerce pour la vente de **matériel de décoratio
 ## Liens
 
 - **Télécharger l’APK** : https://voltify-download-bf.netlify.app
-- **Admin catalogue** : https://voltify-admin-bf.netlify.app
+- **Admin catalogue** : https://voltify.raaga-bf.com
+- **API et Studio Supabase** : https://api.raaga-bf.com
 - **Repo** : https://github.com/princeAkim226/voltify
 - **Release GitHub** : https://github.com/princeAkim226/voltify/releases/tag/v1.0.0
 
@@ -23,7 +24,7 @@ Application mobile Flutter e-commerce pour la vente de **matériel de décoratio
 - Livraison (Ouaga / Bobo) ou retrait magasin
 - Paiement mobile simulé : Orange Money, Moov Money, Telecel Money, Wave
 - Points fidélité Lumineux / Décoration
-- Données mock locales (schéma Supabase dans `docs/supabase_schema.sql`)
+- Backend **Supabase auto-hébergé** sur notre VPS (schéma dans `docs/`)
 
 ## Catalogue
 
@@ -82,12 +83,14 @@ Les deux fichiers sont gitignorés et ne doivent jamais être commités.
 
 ## Publication
 
-Les deux sites Netlify sont en **déploiement manuel** (aucun lien GitHub) :
+La **console admin** tourne sur le VPS, pilotée par Coolify
+(`https://voltify.raaga-bf.com`). Pour la mettre à jour : pousser sur `master`,
+puis *Redeploy* depuis Coolify. L'image se construit depuis
+`admin-server/Dockerfile`.
+
+Le **site de téléchargement** reste sur Netlify, en déploiement manuel :
 
 ```bash
-netlify deploy --prod --dir admin --functions netlify/functions \
-  --site 1d346527-de6e-40d3-be4d-b8c20db87523      # voltify-admin-bf
-
 netlify deploy --prod --dir web_download \
   --site 6bd79847-4cf9-461a-a72d-73923d57a319      # voltify-download-bf
 ```
