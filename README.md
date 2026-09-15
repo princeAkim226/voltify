@@ -12,7 +12,7 @@ Application mobile Flutter e-commerce pour la vente de **matériel de décoratio
 
 ## Fonctionnalités
 
-- Catalogue sur 8 univers, 37 rayons et ~400 familles de produits
+- Catalogue sur 9 univers, 44 rayons et ~400 familles de produits
   (décoration intérieure et extérieure, menuiserie, enseignes, fabrication,
   matériel électrique, vitrerie, consommables)
 - Recherche par famille : « charnière invisible », « pergola bioclimatique »

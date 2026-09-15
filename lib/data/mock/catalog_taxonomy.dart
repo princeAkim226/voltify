@@ -19,7 +19,13 @@ extension SaleModeX on SaleMode {
 /// Taxonomie matériel Voltify.
 ///
 /// Source : catalogue de matériel « Décoration · Menuiserie · Enseignes »
-/// (8 univers, 35 sous-catégories, ~400 familles de produits).
+/// (9 univers, 44 rayons, ~400 familles de produits), l'univers Éclairage
+/// reprenant le classement de LEDcorner traduit en français.
+///
+/// Cette taxonomie est recopiée dans `admin/app.js` et dans les tables
+/// `categories` / `subcategories` de Supabase. Les trois doivent bouger
+/// ensemble : un rayon oublié quelque part, et des produits deviennent
+/// invisibles en boutique.
 ///
 /// Les familles ne sont pas un troisième niveau de navigation : elles servent
 /// de vocabulaire de recherche et d'aide à la saisie côté admin.
