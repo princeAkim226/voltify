@@ -20,10 +20,20 @@ function money(n) {
 // dans un rayon absent de l'app n'apparaît nulle part en boutique.
 // `devis: true` = rayon sur mesure, sans prix ferme.
 const TAXONOMY = [
+  { id: 'eclairage', label: 'Éclairage', children: [
+    { id: 'eclairage_interieur', label: 'Éclairage intérieur' },
+    { id: 'eclairage_exterieur', label: 'Éclairage extérieur' },
+    { id: 'eclairage_jardin', label: 'Éclairage de jardin' },
+    { id: 'eclairage_facade', label: 'Éclairage architectural et façade' },
+    { id: 'eclairage_industriel', label: 'Éclairage industriel et hangar' },
+    { id: 'eclairage_immerge', label: 'Éclairage sous-marin et piscine' },
+    { id: 'eclairage_enseignes', label: "Éclairage d'enseignes" },
+    { id: 'rubans_led', label: 'Rubans et profilés LED' },
+    { id: 'eclairage_accessoires', label: 'Accessoires et alimentation' },
+  ]},
   { id: 'deco_interieure', label: 'Décoration intérieure', children: [
     { id: 'revetements_muraux', label: 'Revêtements muraux' },
     { id: 'plafonds', label: 'Plafonds', devis: true },
-    { id: 'eclairage_deco', label: 'Éclairage décoratif' },
     { id: 'sols', label: 'Sols' },
     { id: 'mur_tv', label: 'Décoration TV / mur TV', devis: true },
     { id: 'miroiterie', label: 'Miroiterie et verre' },
@@ -33,7 +43,6 @@ const TAXONOMY = [
     { id: 'facades', label: 'Façades', devis: true },
     { id: 'terrasses', label: 'Terrasses', devis: true },
     { id: 'jardins', label: 'Jardins' },
-    { id: 'eclairage_exterieur', label: 'Éclairage extérieur' },
     { id: 'clotures', label: 'Clôtures et séparation', devis: true },
     { id: 'pergolas', label: 'Pergolas et espaces extérieurs', devis: true },
   ]},
@@ -61,9 +70,6 @@ const TAXONOMY = [
     { id: 'outillage_pose', label: 'Pose' },
   ]},
   { id: 'electrique', label: 'Matériel électrique', children: [
-    { id: 'led', label: 'LED' },
-    { id: 'alimentation', label: 'Alimentation' },
-    { id: 'luminaires_techniques', label: 'Luminaires techniques' },
     { id: 'installation', label: 'Installation' },
   ]},
   { id: 'vitrerie', label: 'Vitrerie & verre', children: [
