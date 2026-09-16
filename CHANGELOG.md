@@ -7,6 +7,12 @@ pas ce qu'on a changé dans le code.
 `scripts/make_version_json.mjs` lit la section correspondant à la version de
 `pubspec.yaml`. Sans elle, la publication s'arrête.
 
+## 1.5.0
+
+- L'éclairage a désormais son propre rayon, avec neuf sous-rayons
+- Projecteurs, rubans LED et éclairage de piscine se trouvent au même endroit
+- Nouveaux articles de terrasse, jardin, clôture et façade
+
 ## 1.4.0
 
 - La boutique tourne désormais sur notre propre serveur
