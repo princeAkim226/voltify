@@ -44,6 +44,20 @@ void main() {
       expect(r.sizeLabel, isEmpty);
     });
 
+    test('reconnaît une archive ZIP à sa signature', () {
+      expect(estArchiveZip([0x50, 0x4B, 0x03, 0x04]), isTrue);
+    });
+
+    test('rejette une page HTML renvoyée par un intermédiaire réseau', () {
+      // « <!DO » — ce qu'un portail captif enregistre sous le nom .apk.
+      expect(estArchiveZip([0x3C, 0x21, 0x44, 0x4F]), isFalse);
+    });
+
+    test('rejette un fichier trop court pour être identifié', () {
+      expect(estArchiveZip([0x50, 0x4B]), isFalse);
+      expect(estArchiveZip(const []), isFalse);
+    });
+
     test('affiche la taille en mégaoctets', () {
       const r = AppRelease(
         version: '1.4.0',

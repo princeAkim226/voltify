@@ -45,6 +45,18 @@ class AppRelease {
       );
 }
 
+/// Un APK est une archive ZIP : elle commence par « PK\x03\x04 ».
+///
+/// Une page d'erreur HTML renvoyée par un intermédiaire réseau a la même
+/// extension une fois enregistrée, mais pas la même signature.
+bool estArchiveZip(List<int> entete) {
+  if (entete.length < 4) return false;
+  return entete[0] == 0x50 &&
+      entete[1] == 0x4B &&
+      entete[2] == 0x03 &&
+      entete[3] == 0x04;
+}
+
 /// Vérification et installation des mises à jour hors Play Store.
 ///
 /// Android interdit à une app d'en installer une autre sans accord explicite :
@@ -122,22 +134,40 @@ class UpdateService {
       final dir = await getTemporaryDirectory();
       final file = File('${dir.path}/voltify-${release.build}.apk');
       final sink = file.openWrite();
-      final total = response.contentLength ?? release.size;
+
+      // La taille vient du manifeste que nous publions, pas de l'en-tête du
+      // serveur : un proxy opérateur ou un portail captif qui renvoie une page
+      // d'erreur annonce la taille de SA page. Les deux concordent alors, le
+      // contrôle passe, et l'installateur reçoit du HTML nommé .apk — « There
+      // was a problem while parsing the package », sans rien pour comprendre.
+      final attendu = release.size > 0
+          ? release.size
+          : (response.contentLength ?? 0);
       var received = 0;
 
       await for (final chunk in response.stream) {
         sink.add(chunk);
         received += chunk.length;
-        onProgress?.call(total > 0 ? received / total : null);
+        onProgress?.call(attendu > 0 ? received / attendu : null);
       }
       await sink.flush();
       await sink.close();
 
-      // Un fichier tronqué produirait un « paquet non valide » incompréhensible
-      // pour le client : mieux vaut échouer ici, avec un message clair.
-      if (total > 0 && received < total) {
+      if (attendu > 0 && received != attendu) {
         await file.delete();
-        throw Exception('Téléchargement interrompu');
+        throw Exception(
+          'Téléchargement incomplet : $received octets sur $attendu.',
+        );
+      }
+
+      // Même à la bonne taille, ce qui arrive n'est pas forcément une archive.
+      final entete = await file.openRead(0, 4).first;
+      if (!estArchiveZip(entete)) {
+        await file.delete();
+        throw Exception(
+          "Le fichier reçu n'est pas une application Android. "
+          'Votre connexion a probablement intercepté le téléchargement.',
+        );
       }
 
       final result = await OpenFilex.open(

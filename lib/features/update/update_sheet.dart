@@ -69,7 +69,15 @@ class _UpdateSheetState extends State<UpdateSheet> {
       setState(() {
         _busy = false;
         _progress = null;
-        _error = 'Téléchargement impossible. Vérifiez votre connexion.';
+        // Les messages du service disent ce qui a échoué — téléchargement
+        // incomplet, fichier intercepté. Les masquer derrière « vérifiez votre
+        // connexion » laisse le client relancer indéfiniment la même erreur.
+        final detail = e is Exception
+            ? e.toString().replaceFirst('Exception: ', '')
+            : '';
+        _error = detail.isEmpty
+            ? 'Téléchargement impossible. Vérifiez votre connexion.'
+            : detail;
       });
     }
   }
@@ -193,6 +201,19 @@ class _UpdateSheetState extends State<UpdateSheet> {
                 color: AppColors.danger,
                 fontWeight: FontWeight.w700,
                 fontSize: 13,
+              ),
+            ),
+            const SizedBox(height: 6),
+            // Quand le réseau du client intercepte le téléchargement, réessayer
+            // depuis l'app échouera autant de fois qu'il insistera. Le
+            // navigateur, lui, passe souvent.
+            const Text(
+              'Si cela se reproduit, téléchargez depuis un navigateur : '
+              'dl.raaga-bf.com',
+              style: TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 12,
+                height: 1.35,
               ),
             ),
           ],
