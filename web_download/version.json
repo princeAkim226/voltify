@@ -1,12 +1,12 @@
 {
-  "version": "1.5.0",
-  "build": 4,
-  "url": "https://github.com/princeAkim226/voltify/releases/download/v1.5.0/voltify.apk",
-  "size": 23821966,
+  "version": "1.6.0",
+  "build": 5,
+  "url": "https://github.com/princeAkim226/voltify/releases/download/v1.6.0/voltify.apk",
+  "size": 27494873,
   "minBuild": 3,
   "notes": [
-    "L'éclairage a désormais son propre rayon, avec neuf sous-rayons",
-    "Projecteurs, rubans LED et éclairage de piscine se trouvent au même endroit",
-    "Nouveaux articles de terrasse, jardin, clôture et façade"
+    "L'application s'appelle désormais Lumi-Dec",
+    "Catalogue en trois univers : éclairage, aménagements et enseignes",
+    "Photos de réalisations pour chaque univers, dès l'accueil"
   ]
 }
