@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../data/mock/catalog_taxonomy.dart';
+import '../../data/mock/marketing_sections.dart';
 import '../../data/mock/mock_catalog.dart';
 import '../../data/models/models.dart';
 import '../../data/repositories/app_state.dart';
@@ -68,7 +69,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.textTertiary),
                       ),
                       Text(
-                        'Voltify Burkina',
+                        'Lumi-Dec Burkina',
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
                       ),
                     ],
@@ -188,34 +189,33 @@ class _HomeScreenState extends State<HomeScreen> {
         const SliverToBoxAdapter(child: SizedBox(height: 22)),
         SliverToBoxAdapter(
           child: SectionHeader(
-            title: 'Univers du catalogue',
+            title: 'Notre catalogue',
             actionLabel: 'Tout voir',
             onAction: widget.onOpenCatalog,
           ),
         ),
-        SliverToBoxAdapter(
-          child: SizedBox(
-            height: 96,
-            child: ListView.separated(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              scrollDirection: Axis.horizontal,
-              itemCount: CatalogTaxonomy.categories.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 10),
-              itemBuilder: (context, index) {
-                final cat = CatalogTaxonomy.categories[index];
-                return _CategoryChip(
-                  icon: cat.icon,
-                  label: cat.label,
-                  onTap: () {
-                    context.read<CatalogProvider>().setCategory(cat.id);
-                    widget.onOpenCatalog?.call();
-                  },
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
+          sliver: SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (context, index) {
+                final section = MarketingSections.sections[index];
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: _MarketingSectionCard(
+                    section: section,
+                    onTap: () {
+                      context.read<CatalogProvider>().setSection(section.id);
+                      widget.onOpenCatalog?.call();
+                    },
+                  ),
                 );
               },
+              childCount: MarketingSections.sections.length,
             ),
           ),
         ),
-        const SliverToBoxAdapter(child: SizedBox(height: 12)),
+        const SliverToBoxAdapter(child: SizedBox(height: 8)),
         SliverToBoxAdapter(
           child: SectionHeader(
             title: 'Sélection du moment',
@@ -224,7 +224,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
         SliverPadding(
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 30),
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
           sliver: catalog.loading
               ? const SliverToBoxAdapter(
                   child: Padding(
@@ -260,7 +260,132 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
         ),
+        const SliverToBoxAdapter(child: _ClosingBanner()),
+        const SliverToBoxAdapter(child: SizedBox(height: 28)),
       ],
+    );
+  }
+}
+
+class _MarketingSectionCard extends StatelessWidget {
+  const _MarketingSectionCard({required this.section, required this.onTap});
+
+  final MarketingSection section;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(18),
+        child: Ink(
+          height: 148,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(18),
+            image: DecorationImage(
+              image: AssetImage(section.coverAsset),
+              fit: BoxFit.cover,
+              colorFilter: ColorFilter.mode(
+                Colors.black.withValues(alpha: 0.45),
+                BlendMode.darken,
+              ),
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: section.accent,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    'POINT ${section.number}',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  section.title,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 20,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  section.subtitle,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.88),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ClosingBanner extends StatelessWidget {
+  const _ClosingBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+      child: Container(
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF7F3EC),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: const Color(0xFFD9D2C8)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              MarketingSections.closingTitle,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w900,
+                  ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              MarketingSections.closingBody,
+              style: const TextStyle(
+                color: AppColors.textSecondary,
+                height: 1.45,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              MarketingSections.closingSlogan.toUpperCase(),
+              style: const TextStyle(
+                color: Color(0xFFC9953A),
+                fontWeight: FontWeight.w800,
+                fontSize: 12,
+                letterSpacing: 0.4,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -391,53 +516,6 @@ class _PointsCard extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _CategoryChip extends StatelessWidget {
-  const _CategoryChip({required this.icon, required this.label, required this.onTap});
-
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        width: 100,
-        padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.border),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: AppColors.primarySoft,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(icon, color: AppColors.primary, size: 20),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700, height: 1.15),
-            ),
-          ],
-        ),
       ),
     );
   }

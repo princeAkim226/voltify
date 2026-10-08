@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../data/mock/catalog_taxonomy.dart';
+import '../../data/mock/marketing_sections.dart';
+import '../../data/models/models.dart';
 import '../../data/repositories/app_state.dart';
 import '../../shared/widgets/common_widgets.dart';
 import '../product_detail/product_detail_screen.dart';
@@ -14,6 +16,9 @@ class CatalogScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final catalog = context.watch<CatalogProvider>();
     final products = catalog.products;
+    final section = catalog.selectedSectionId == null
+        ? null
+        : MarketingSections.byId(catalog.selectedSectionId!);
     final selectedCat = catalog.selectedCategoryId == null
         ? null
         : CatalogTaxonomy.byId(catalog.selectedCategoryId!);
@@ -37,8 +42,6 @@ class CatalogScreen extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 12),
-        // Le catalogue couvre ~400 familles pour une poignée de références en
-        // stock : on oriente vers le bon rayon même sans produit à montrer.
         if (catalog.familySuggestions.isNotEmpty) ...[
           SizedBox(
             height: 40,
@@ -76,211 +79,418 @@ class CatalogScreen extends StatelessWidget {
           ),
           const SizedBox(height: 10),
         ],
-        if (selectedCat == null) ...[
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                'Univers du catalogue',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
-              ),
-            ),
-          ),
-          const SizedBox(height: 10),
-          Expanded(
-            child: GridView.builder(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                mainAxisSpacing: 12,
-                crossAxisSpacing: 12,
-                childAspectRatio: 1.15,
-              ),
-              itemCount: CatalogTaxonomy.categories.length,
-              itemBuilder: (context, index) {
-                final cat = CatalogTaxonomy.categories[index];
-                return _CategoryTile(
-                  icon: cat.icon,
-                  label: cat.label,
-                  subtitle: '${cat.children.length} rayons · ${cat.familyCount} familles',
-                  onTap: () => catalog.setCategory(cat.id),
-                );
+        if (section == null && selectedCat == null)
+          Expanded(child: _SectionsRoot(catalog: catalog))
+        else if (selectedCat == null && section != null)
+          Expanded(child: _SectionBrowse(catalog: catalog, section: section))
+        else if (selectedCat != null)
+          ..._categoryBrowse(
+            context,
+            catalog: catalog,
+            selectedCat: selectedCat,
+            products: products,
+            section: section,
+          )
+        else
+          const Expanded(child: SizedBox.shrink()),
+      ],
+    );
+  }
+
+  List<Widget> _categoryBrowse(
+    BuildContext context, {
+    required CatalogProvider catalog,
+    required MaterialCategory selectedCat,
+    required List<Product> products,
+    MarketingSection? section,
+  }) {
+    return [
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        child: Row(
+          children: [
+            IconButton(
+              onPressed: () {
+                if (catalog.selectedSubcategoryId != null) {
+                  catalog.setSubcategory(null);
+                } else if (section != null) {
+                  catalog.setCategory(null);
+                } else {
+                  catalog.clearFilters();
+                }
               },
+              icon: const Icon(Icons.arrow_back_rounded),
             ),
+            Expanded(
+              child: Text(
+                catalog.selectedSubcategoryId == null
+                    ? selectedCat.label
+                    : CatalogTaxonomy.labelFor(
+                        categoryId: selectedCat.id,
+                        subcategoryId: catalog.selectedSubcategoryId,
+                      ),
+                style: const TextStyle(fontWeight: FontWeight.w800),
+              ),
+            ),
+          ],
+        ),
+      ),
+      if (catalog.selectedSubcategoryId == null) ...[
+        SizedBox(
+          height: 44,
+          child: ListView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            children: [
+              _Chip(
+                label: 'Tout',
+                selected: true,
+                onTap: () {},
+              ),
+              ...selectedCat.children.map(
+                (s) => _Chip(
+                  label: s.label,
+                  selected: false,
+                  onTap: () => catalog.setSubcategory(s.id),
+                ),
+              ),
+            ],
           ),
-        ] else ...[
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: Row(
-              children: [
-                IconButton(
-                  onPressed: () {
-                    if (catalog.selectedSubcategoryId != null) {
-                      catalog.setSubcategory(null);
-                    } else {
-                      catalog.clearFilters();
-                    }
+        ),
+        const SizedBox(height: 8),
+        Expanded(
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+            children: [
+              ...selectedCat.children.map(
+                (s) => ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: CircleAvatar(
+                    backgroundColor: AppColors.primarySoft,
+                    child: Icon(selectedCat.icon, color: AppColors.primary, size: 18),
+                  ),
+                  title: Text(s.label, style: const TextStyle(fontWeight: FontWeight.w700)),
+                  subtitle: Text(
+                    '${catalog.productById.values.where((p) => p.categoryId == selectedCat.id && p.subcategoryId == s.id).length} produits',
+                  ),
+                  trailing: const Icon(Icons.chevron_right_rounded),
+                  onTap: () => catalog.setSubcategory(s.id),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text('Tous les produits',
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800)),
+              const SizedBox(height: 8),
+              GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  mainAxisSpacing: 12,
+                  crossAxisSpacing: 12,
+                  childAspectRatio: 0.68,
+                ),
+                itemCount: products.length,
+                itemBuilder: (context, index) {
+                  final p = products[index];
+                  return ProductCard(
+                    product: p,
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => ProductDetailScreen(product: p)),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+      ] else
+        Expanded(
+          child: products.isEmpty
+              ? const Center(child: Text('Aucun produit dans cette sous-catégorie'))
+              : GridView.builder(
+                  padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    mainAxisSpacing: 12,
+                    crossAxisSpacing: 12,
+                    childAspectRatio: 0.68,
+                  ),
+                  itemCount: products.length,
+                  itemBuilder: (context, index) {
+                    final product = products[index];
+                    return ProductCard(
+                      product: product,
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => ProductDetailScreen(product: product)),
+                      ),
+                    );
                   },
-                  icon: const Icon(Icons.arrow_back_rounded),
                 ),
-                Expanded(
-                  child: Text(
-                    catalog.selectedSubcategoryId == null
-                        ? selectedCat.label
-                        : CatalogTaxonomy.labelFor(
-                            categoryId: selectedCat.id,
-                            subcategoryId: catalog.selectedSubcategoryId,
-                          ),
-                    style: const TextStyle(fontWeight: FontWeight.w800),
-                  ),
-                ),
-              ],
+        ),
+    ];
+  }
+}
+
+class _SectionsRoot extends StatelessWidget {
+  const _SectionsRoot({required this.catalog});
+
+  final CatalogProvider catalog;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+      children: [
+        Text(
+          'Catalogue Lumi-Dec',
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+        ),
+        const SizedBox(height: 4),
+        const Text(
+          'Trois univers : éclairage, aménagements et enseignes.',
+          style: TextStyle(color: AppColors.textSecondary),
+        ),
+        const SizedBox(height: 14),
+        ...MarketingSections.sections.map(
+          (section) => Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: _SectionHero(
+              section: section,
+              onTap: () => catalog.setSection(section.id),
             ),
           ),
-          if (catalog.selectedSubcategoryId == null) ...[
-            SizedBox(
-              height: 44,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                children: [
-                  _Chip(
-                    label: 'Tout',
-                    selected: true,
-                    onTap: () {},
-                  ),
-                  ...selectedCat.children.map(
-                    (s) => _Chip(
-                      label: s.label,
-                      selected: false,
-                      onTap: () => catalog.setSubcategory(s.id),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 8),
-            Expanded(
-              child: ListView(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-                children: [
-                  ...selectedCat.children.map(
-                    (s) => ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      leading: CircleAvatar(
-                        backgroundColor: AppColors.primarySoft,
-                        child: Icon(selectedCat.icon, color: AppColors.primary, size: 18),
-                      ),
-                      title: Text(s.label, style: const TextStyle(fontWeight: FontWeight.w700)),
-                      subtitle: Text(
-                        '${catalog.productById.values.where((p) => p.categoryId == selectedCat.id && p.subcategoryId == s.id).length} produits',
-                      ),
-                      trailing: const Icon(Icons.chevron_right_rounded),
-                      onTap: () => catalog.setSubcategory(s.id),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text('Tous les produits', style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800)),
-                  const SizedBox(height: 8),
-                  GridView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      mainAxisSpacing: 12,
-                      crossAxisSpacing: 12,
-                      childAspectRatio: 0.68,
-                    ),
-                    itemCount: products.length,
-                    itemBuilder: (context, index) {
-                      final p = products[index];
-                      return ProductCard(
-                        product: p,
-                        onTap: () => Navigator.of(context).push(
-                          MaterialPageRoute(builder: (_) => ProductDetailScreen(product: p)),
-                        ),
-                      );
-                    },
-                  ),
-                ],
-              ),
-            ),
-          ] else
-            Expanded(
-              child: products.isEmpty
-                  ? const Center(child: Text('Aucun produit dans cette sous-catégorie'))
-                  : GridView.builder(
-                      padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        mainAxisSpacing: 12,
-                        crossAxisSpacing: 12,
-                        childAspectRatio: 0.68,
-                      ),
-                      itemCount: products.length,
-                      itemBuilder: (context, index) {
-                        final product = products[index];
-                        return ProductCard(
-                          product: product,
-                          onTap: () => Navigator.of(context).push(
-                            MaterialPageRoute(builder: (_) => ProductDetailScreen(product: product)),
-                          ),
-                        );
-                      },
-                    ),
-            ),
-        ],
+        ),
       ],
     );
   }
 }
 
-class _CategoryTile extends StatelessWidget {
-  const _CategoryTile({
-    required this.icon,
-    required this.label,
-    required this.subtitle,
-    required this.onTap,
-  });
+class _SectionBrowse extends StatelessWidget {
+  const _SectionBrowse({required this.catalog, required this.section});
 
-  final IconData icon;
-  final String label;
-  final String subtitle;
+  final CatalogProvider catalog;
+  final MarketingSection section;
+
+  @override
+  Widget build(BuildContext context) {
+    final categories = CatalogTaxonomy.categories
+        .where((c) => section.categoryIds.contains(c.id))
+        .toList();
+    final products = catalog.products;
+
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(12, 0, 20, 24),
+      children: [
+        Row(
+          children: [
+            IconButton(
+              onPressed: () => catalog.setSection(null),
+              icon: const Icon(Icons.arrow_back_rounded),
+            ),
+            Expanded(
+              child: Text(
+                'Point ${section.number} — ${section.title}',
+                style: const TextStyle(fontWeight: FontWeight.w800),
+              ),
+            ),
+          ],
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(8, 0, 0, 10),
+          child: Text(
+            section.body,
+            style: const TextStyle(color: AppColors.textSecondary, height: 1.4),
+          ),
+        ),
+        if (section.id == 'eclairage')
+          Padding(
+            padding: const EdgeInsets.fromLTRB(8, 0, 0, 12),
+            child: Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: const [
+                _InfoPill(label: '1.A Architectural & intérieur'),
+                _InfoPill(label: '1.B LED & décors de plafond'),
+              ],
+            ),
+          ),
+        SizedBox(
+          height: 120,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.only(left: 8),
+            itemCount: section.galleryAssets.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 10),
+            itemBuilder: (context, index) {
+              return ClipRRect(
+                borderRadius: BorderRadius.circular(14),
+                child: Image.asset(
+                  section.galleryAssets[index],
+                  width: 160,
+                  height: 120,
+                  fit: BoxFit.cover,
+                ),
+              );
+            },
+          ),
+        ),
+        const SizedBox(height: 16),
+        Padding(
+          padding: const EdgeInsets.only(left: 8),
+          child: Text(
+            'Rayons',
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
+          ),
+        ),
+        const SizedBox(height: 6),
+        ...categories.map(
+          (cat) => ListTile(
+            contentPadding: const EdgeInsets.only(left: 8),
+            leading: CircleAvatar(
+              backgroundColor: AppColors.primarySoft,
+              child: Icon(cat.icon, color: AppColors.primary, size: 18),
+            ),
+            title: Text(cat.label, style: const TextStyle(fontWeight: FontWeight.w700)),
+            subtitle: Text('${cat.children.length} rayons · ${cat.familyCount} familles'),
+            trailing: const Icon(Icons.chevron_right_rounded),
+            onTap: () => catalog.setCategory(cat.id),
+          ),
+        ),
+        const SizedBox(height: 12),
+        Padding(
+          padding: const EdgeInsets.only(left: 8),
+          child: Text(
+            'Produits de la section',
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Padding(
+          padding: const EdgeInsets.only(left: 8),
+          child: products.isEmpty
+              ? const Text('Aucun produit pour le moment dans cette section.')
+              : GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    mainAxisSpacing: 12,
+                    crossAxisSpacing: 12,
+                    childAspectRatio: 0.68,
+                  ),
+                  itemCount: products.length,
+                  itemBuilder: (context, index) {
+                    final p = products[index];
+                    return ProductCard(
+                      product: p,
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => ProductDetailScreen(product: p)),
+                      ),
+                    );
+                  },
+                ),
+        ),
+      ],
+    );
+  }
+}
+
+class _SectionHero extends StatelessWidget {
+  const _SectionHero({required this.section, required this.onTap});
+
+  final MarketingSection section;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: AppColors.surface,
-      borderRadius: BorderRadius.circular(18),
+      color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(18),
         child: Ink(
+          height: 168,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: AppColors.border),
-          ),
-          padding: const EdgeInsets.all(14),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: AppColors.primarySoft,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(icon, color: AppColors.primary),
+            image: DecorationImage(
+              image: AssetImage(section.coverAsset),
+              fit: BoxFit.cover,
+              colorFilter: ColorFilter.mode(
+                Colors.black.withValues(alpha: 0.42),
+                BlendMode.darken,
               ),
-              const Spacer(),
-              Text(label, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.w800)),
-              const SizedBox(height: 4),
-              Text(subtitle, style: const TextStyle(color: AppColors.textTertiary, fontSize: 11)),
-            ],
+            ),
           ),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: section.accent,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    'POINT ${section.number}',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 11,
+                    ),
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  section.title,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 22,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  section.subtitle,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.9),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _InfoPill extends StatelessWidget {
+  const _InfoPill({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppColors.amberSoft,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.amberBorder),
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(
+          color: Color(0xFF633806),
+          fontWeight: FontWeight.w700,
+          fontSize: 12,
         ),
       ),
     );

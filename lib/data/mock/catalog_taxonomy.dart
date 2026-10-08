@@ -16,7 +16,7 @@ extension SaleModeX on SaleMode {
       this == SaleMode.devis ? 'Demander un devis' : 'Ajouter au panier';
 }
 
-/// Taxonomie matériel Voltify.
+/// Taxonomie matériel Lumi-Dec.
 ///
 /// Source : catalogue de matériel « Décoration · Menuiserie · Enseignes »
 /// (9 univers, 44 rayons, ~400 familles de produits), l'univers Éclairage
@@ -937,7 +937,7 @@ class FamilyHit {
   final String family;
 }
 
-/// Paliers de fidélité Voltify.
+/// Paliers de fidélité Lumi-Dec.
 enum LoyaltyTier { bronze, silver, gold, platinum }
 
 extension LoyaltyTierX on LoyaltyTier {
