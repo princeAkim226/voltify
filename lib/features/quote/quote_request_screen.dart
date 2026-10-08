@@ -112,7 +112,7 @@ class _QuoteRequestScreenState extends State<QuoteRequestScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Un conseiller Voltify vous rappelle au ${request.phone} sous '
+              'Un conseiller Lumi-Dec vous rappelle au ${request.phone} sous '
               '48 h ouvrées pour ${request.productName}.',
               style: const TextStyle(
                 color: AppColors.textSecondary,

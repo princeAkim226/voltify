@@ -7,6 +7,12 @@ pas ce qu'on a changé dans le code.
 `scripts/make_version_json.mjs` lit la section correspondant à la version de
 `pubspec.yaml`. Sans elle, la publication s'arrête.
 
+## 1.6.0
+
+- L'application s'appelle désormais Lumi-Dec
+- Catalogue en trois univers : éclairage, aménagements et enseignes
+- Photos de réalisations pour chaque univers, dès l'accueil
+
 ## 1.5.0
 
 - L'éclairage a désormais son propre rayon, avec neuf sous-rayons

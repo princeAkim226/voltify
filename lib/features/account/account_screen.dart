@@ -44,7 +44,7 @@ class AccountScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      profile?.fullName ?? 'Invité Voltify',
+                      profile?.fullName ?? 'Invité Lumi-Dec',
                       style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 18),
                     ),
                     const SizedBox(height: 4),

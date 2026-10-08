@@ -229,7 +229,7 @@ document.querySelectorAll('.nav-item').forEach((btn) => {
       products: ['Produits', 'Catalogue synchronisé avec l’app mobile'],
       orders: ['Commandes', 'Historique des commandes clients'],
       quotes: ['Demandes de devis', 'Sur-mesure : menuiserie, enseignes, pergolas, vitrerie'],
-      pickup: ['Points de retrait', 'Magasins Voltify'],
+      pickup: ['Points de retrait', 'Magasins Lumi-Dec'],
     };
     document.getElementById('view-title').textContent = titles[currentView][0];
     document.getElementById('view-sub').textContent = titles[currentView][1];

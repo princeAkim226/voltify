@@ -123,10 +123,10 @@ class _UpdateSheetState extends State<UpdateSheet> {
           const SizedBox(height: 6),
           Text(
             widget.blocking
-                ? 'Cette version de Voltify est trop ancienne pour afficher le '
+                ? 'Cette version de Lumi-Dec est trop ancienne pour afficher le '
                     'catalogue à jour. Installez la version ${r.version} pour '
                     'continuer.'
-                : 'Voltify ${r.version} est disponible.',
+                : 'Lumi-Dec ${r.version} est disponible.',
             style: const TextStyle(
               color: AppColors.textSecondary,
               height: 1.45,

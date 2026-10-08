@@ -141,5 +141,5 @@ if (manquantes.length > 0) {
 }
 
 serveur.listen(PORT, () => {
-  console.log(`Console admin Voltify sur le port ${PORT}`);
+  console.log(`Console admin Lumi-Dec sur le port ${PORT}`);
 });

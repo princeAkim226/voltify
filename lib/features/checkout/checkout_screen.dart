@@ -99,7 +99,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   child: _ModeCard(
                     selected: draft.deliveryMode == DeliveryMode.pickup,
                     title: 'Retrait',
-                    subtitle: 'Magasin Voltify',
+                    subtitle: 'Magasin Lumi-Dec',
                     icon: Icons.storefront_rounded,
                     onTap: () => draft.update(deliveryMode: DeliveryMode.pickup),
                   ),

@@ -149,7 +149,7 @@ jobs:
           # fichier, il ne change que l'affichage — d'où une 404 en 1.4.0.
           cp build/app/outputs/flutter-apk/app-release.apk /tmp/voltify.apk
           gh release create "$GITHUB_REF_NAME" /tmp/voltify.apk \
-            --title "Voltify ${GITHUB_REF_NAME#v}" \
+            --title "Lumi-Dec ${GITHUB_REF_NAME#v}" \
             --notes-file /tmp/notes.md
 
       # Annoncer une version dont l'APK est introuvable ferait télécharger une

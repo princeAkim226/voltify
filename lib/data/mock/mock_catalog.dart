@@ -49,14 +49,14 @@ class MockCatalog {
   static const pickupPoints = [
     PickupPoint(
       id: 'pk1',
-      name: 'Voltify Ouaga Centre',
+      name: 'Lumi-Dec Ouaga Centre',
       address: 'Avenue Kwame Nkrumah, près du Rond-point des Nations',
       city: 'Ouagadougou',
       hours: 'Lun–Sam 9h–19h',
     ),
     PickupPoint(
       id: 'pk2',
-      name: 'Voltify Bobo Dioulasso',
+      name: 'Lumi-Dec Bobo Dioulasso',
       address: 'Secteur 4, Avenue de la Révolution',
       city: 'Bobo-Dioulasso',
       hours: 'Lun–Sam 9h–18h30',
@@ -67,7 +67,7 @@ class MockCatalog {
     const Product(
       id: 'l1',
       name: 'Down Light COB 12W',
-      brand: 'Voltify',
+      brand: 'Lumi-Dec',
       categoryId: 'eclairage',
       subcategoryId: 'eclairage_interieur',
       price: 8500,
@@ -114,7 +114,7 @@ class MockCatalog {
     const Product(
       id: 'l5',
       name: 'Lustre Stellar 48W',
-      brand: 'Voltify Déco Light',
+      brand: 'Lumi-Dec Déco Light',
       categoryId: 'eclairage',
       subcategoryId: 'eclairage_interieur',
       price: 125000,
@@ -139,7 +139,7 @@ class MockCatalog {
     const Product(
       id: 'l7',
       name: 'Applique murale outdoor 12W',
-      brand: 'Voltify',
+      brand: 'Lumi-Dec',
       categoryId: 'eclairage',
       subcategoryId: 'eclairage_exterieur',
       price: 14000,
@@ -150,7 +150,7 @@ class MockCatalog {
     const Product(
       id: 'l8',
       name: 'Réverbère LED Street 100W',
-      brand: 'Voltify Pro',
+      brand: 'Lumi-Dec Pro',
       categoryId: 'eclairage',
       subcategoryId: 'eclairage_exterieur',
       price: 98000,
@@ -172,7 +172,7 @@ class MockCatalog {
     const Product(
       id: 'l10',
       name: 'Spike Light 7W',
-      brand: 'Voltify',
+      brand: 'Lumi-Dec',
       categoryId: 'eclairage',
       subcategoryId: 'eclairage_jardin',
       price: 9500,
@@ -194,7 +194,7 @@ class MockCatalog {
     const Product(
       id: 'l12',
       name: 'Guirlande LED 10m',
-      brand: 'Voltify',
+      brand: 'Lumi-Dec',
       categoryId: 'eclairage',
       subcategoryId: 'eclairage_jardin',
       price: 12000,
@@ -206,7 +206,7 @@ class MockCatalog {
     const Product(
       id: 'l13',
       name: 'Wall Washer façade 36W',
-      brand: 'Voltify Pro',
+      brand: 'Lumi-Dec Pro',
       categoryId: 'eclairage',
       subcategoryId: 'eclairage_facade',
       price: 65000,
@@ -217,7 +217,7 @@ class MockCatalog {
     const Product(
       id: 'l14',
       name: 'Profilé aluminium 2m + diffuseur',
-      brand: 'Voltify',
+      brand: 'Lumi-Dec',
       categoryId: 'electrique',
       subcategoryId: 'installation',
       price: 8500,
@@ -241,7 +241,7 @@ class MockCatalog {
     const Product(
       id: 'l16',
       name: 'High Bay UFO 150W',
-      brand: 'Voltify Pro',
+      brand: 'Lumi-Dec Pro',
       categoryId: 'eclairage',
       subcategoryId: 'eclairage_industriel',
       price: 78000,
@@ -263,7 +263,7 @@ class MockCatalog {
     const Product(
       id: 'l18',
       name: 'Bloc secours Exit LED',
-      brand: 'Voltify Pro',
+      brand: 'Lumi-Dec Pro',
       categoryId: 'eclairage',
       subcategoryId: 'eclairage_industriel',
       price: 16000,
@@ -286,7 +286,7 @@ class MockCatalog {
     const Product(
       id: 'l20',
       name: 'Enseigne néon “Open”',
-      brand: 'Voltify Sign',
+      brand: 'Lumi-Dec Sign',
       categoryId: 'enseignes',
       subcategoryId: 'enseignes_lumineuses',
       saleModeOverride: SaleMode.panier,
@@ -298,7 +298,7 @@ class MockCatalog {
     const Product(
       id: 'l21',
       name: 'Rope Light 10m blanc chaud',
-      brand: 'Voltify',
+      brand: 'Lumi-Dec',
       categoryId: 'eclairage',
       subcategoryId: 'rubans_led',
       price: 15000,
@@ -309,7 +309,7 @@ class MockCatalog {
     const Product(
       id: 'l22',
       name: 'Spot piscine 12W IP68',
-      brand: 'Voltify Aqua',
+      brand: 'Lumi-Dec Aqua',
       categoryId: 'eclairage',
       subcategoryId: 'eclairage_immerge',
       price: 38000,
@@ -320,7 +320,7 @@ class MockCatalog {
     const Product(
       id: 'l23',
       name: 'Projecteur sous-marin 10W',
-      brand: 'Voltify Aqua',
+      brand: 'Lumi-Dec Aqua',
       categoryId: 'eclairage',
       subcategoryId: 'eclairage_immerge',
       price: 42000,
@@ -342,7 +342,7 @@ class MockCatalog {
     const Product(
       id: 'l25',
       name: 'Dimmer mural LED 220V',
-      brand: 'Voltify',
+      brand: 'Lumi-Dec',
       categoryId: 'eclairage',
       subcategoryId: 'eclairage_accessoires',
       price: 9500,
@@ -353,7 +353,7 @@ class MockCatalog {
     const Product(
       id: 'l26',
       name: 'Kit connecteurs bande LED',
-      brand: 'Voltify',
+      brand: 'Lumi-Dec',
       categoryId: 'electrique',
       subcategoryId: 'installation',
       price: 3500,
@@ -364,7 +364,7 @@ class MockCatalog {
     const Product(
       id: 'l27',
       name: 'Spot COB 15W salon',
-      brand: 'Voltify',
+      brand: 'Lumi-Dec',
       categoryId: 'eclairage',
       subcategoryId: 'eclairage_interieur',
       price: 11000,
@@ -375,7 +375,7 @@ class MockCatalog {
     const Product(
       id: 'l28',
       name: 'Éclairage placard 1W',
-      brand: 'Voltify',
+      brand: 'Lumi-Dec',
       categoryId: 'eclairage',
       subcategoryId: 'eclairage_interieur',
       price: 4500,
@@ -388,7 +388,7 @@ class MockCatalog {
     const Product(
       id: 'd1',
       name: 'Papier peint 3D panneau 70×70',
-      brand: 'Voltify Déco',
+      brand: 'Lumi-Dec Déco',
       categoryId: 'deco_interieure',
       subcategoryId: 'revetements_muraux',
       price: 3500,
@@ -427,7 +427,7 @@ class MockCatalog {
     const Product(
       id: 'd4',
       name: 'Cuisine moderne sur mesure',
-      brand: 'Voltify Atelier',
+      brand: 'Lumi-Dec Atelier',
       categoryId: 'deco_interieure',
       subcategoryId: 'mur_tv',
       price: 0,
@@ -492,7 +492,7 @@ class MockCatalog {
     const Product(
       id: 'm5',
       name: 'Cuisine équipée sur mesure',
-      brand: 'Voltify Atelier',
+      brand: 'Lumi-Dec Atelier',
       categoryId: 'menuiserie',
       subcategoryId: 'meubles_mesure',
       price: 0,
@@ -506,7 +506,7 @@ class MockCatalog {
     const Product(
       id: 'm6',
       name: 'Dressing sur mesure',
-      brand: 'Voltify Atelier',
+      brand: 'Lumi-Dec Atelier',
       categoryId: 'menuiserie',
       subcategoryId: 'meubles_mesure',
       price: 0,
@@ -520,7 +520,7 @@ class MockCatalog {
     const Product(
       id: 'm7',
       name: 'Porte coulissante à galandage',
-      brand: 'Voltify Atelier',
+      brand: 'Lumi-Dec Atelier',
       categoryId: 'menuiserie',
       subcategoryId: 'portes',
       price: 0,
@@ -558,7 +558,7 @@ class MockCatalog {
     const Product(
       id: 'e3',
       name: 'Caisson lumineux double face',
-      brand: 'Voltify Sign',
+      brand: 'Lumi-Dec Sign',
       categoryId: 'enseignes',
       subcategoryId: 'caissons',
       price: 0,
@@ -571,7 +571,7 @@ class MockCatalog {
     const Product(
       id: 'e4',
       name: 'Lettres boîtiers inox rétroéclairées',
-      brand: 'Voltify Sign',
+      brand: 'Lumi-Dec Sign',
       categoryId: 'enseignes',
       subcategoryId: 'enseignes_lumineuses',
       price: 0,
@@ -584,7 +584,7 @@ class MockCatalog {
     const Product(
       id: 'e5',
       name: 'Totem signalétique 2 m',
-      brand: 'Voltify Sign',
+      brand: 'Lumi-Dec Sign',
       categoryId: 'enseignes',
       subcategoryId: 'signaletique',
       price: 0,
@@ -673,7 +673,7 @@ class MockCatalog {
     const Product(
       id: 'v2',
       name: 'Cloison vitrée style atelier',
-      brand: 'Voltify Verre',
+      brand: 'Lumi-Dec Verre',
       categoryId: 'vitrerie',
       subcategoryId: 'applications_verre',
       price: 0,
@@ -746,7 +746,7 @@ class MockCatalog {
     Product(
       id: 'de1',
       name: 'Carrelage extérieur antidérapant 60×60',
-      brand: 'Voltify',
+      brand: 'Lumi-Dec',
       categoryId: 'deco_exterieure',
       subcategoryId: 'terrasses',
       price: 9500,
@@ -759,7 +759,7 @@ class MockCatalog {
     Product(
       id: 'de2',
       name: 'Gazon synthétique 40 mm',
-      brand: 'Voltify',
+      brand: 'Lumi-Dec',
       categoryId: 'deco_exterieure',
       subcategoryId: 'jardins',
       price: 12000,
@@ -773,7 +773,7 @@ class MockCatalog {
     Product(
       id: 'de3',
       name: 'Claustra WPC 1,80 m',
-      brand: 'Voltify',
+      brand: 'Lumi-Dec',
       categoryId: 'deco_exterieure',
       subcategoryId: 'clotures',
       price: 28000,
@@ -786,7 +786,7 @@ class MockCatalog {
     Product(
       id: 'de4',
       name: 'Peinture façade 20 L',
-      brand: 'Voltify',
+      brand: 'Lumi-Dec',
       categoryId: 'deco_exterieure',
       subcategoryId: 'facades',
       price: 45000,

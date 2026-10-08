@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 
 import '../mock/catalog_taxonomy.dart';
+import '../mock/marketing_sections.dart';
 import '../mock/mock_catalog.dart';
 import '../models/models.dart';
 import 'supabase_service.dart';
@@ -276,6 +277,7 @@ class CatalogProvider extends ChangeNotifier {
     load();
   }
 
+  String? _selectedSectionId;
   String? _selectedCategoryId;
   String? _selectedSubcategoryId;
   String _query = '';
@@ -285,6 +287,7 @@ class CatalogProvider extends ChangeNotifier {
   bool usingRemote = false;
   String? error;
 
+  String? get selectedSectionId => _selectedSectionId;
   String? get selectedCategoryId => _selectedCategoryId;
   String? get selectedSubcategoryId => _selectedSubcategoryId;
   String get query => _query;
@@ -293,6 +296,13 @@ class CatalogProvider extends ChangeNotifier {
 
   List<Product> get products {
     var list = _all;
+    if (_selectedSectionId != null) {
+      final section = MarketingSections.byId(_selectedSectionId!);
+      if (section != null) {
+        final ids = section.categoryIds.toSet();
+        list = list.where((p) => ids.contains(p.categoryId)).toList();
+      }
+    }
     if (_selectedCategoryId != null) {
       list = list.where((p) => p.categoryId == _selectedCategoryId).toList();
     }
@@ -368,9 +378,23 @@ class CatalogProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setSection(String? sectionId) {
+    _selectedSectionId = sectionId;
+    _selectedCategoryId = null;
+    _selectedSubcategoryId = null;
+    notifyListeners();
+  }
+
   void setCategory(String? categoryId, {String? subcategoryId}) {
     _selectedCategoryId = categoryId;
     _selectedSubcategoryId = subcategoryId;
+    // Ouvrir un univers hors section marketing : on quitte le filtre section.
+    if (categoryId != null && _selectedSectionId != null) {
+      final section = MarketingSections.byId(_selectedSectionId!);
+      if (section == null || !section.categoryIds.contains(categoryId)) {
+        _selectedSectionId = null;
+      }
+    }
     notifyListeners();
   }
 
@@ -380,6 +404,7 @@ class CatalogProvider extends ChangeNotifier {
   }
 
   void clearFilters() {
+    _selectedSectionId = null;
     _selectedCategoryId = null;
     _selectedSubcategoryId = null;
     notifyListeners();
