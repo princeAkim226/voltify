@@ -1,4 +1,4 @@
-# Voltify Admin
+# Lumi-Dec Admin
 
 Connexion par **identifiant / mot de passe** (plus de clé à coller).
 
